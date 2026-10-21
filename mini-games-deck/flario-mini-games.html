@@ -1,0 +1,2559 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Flario Game: новые форматы геймификации</title>
+<style>:root{
+  --bg:#faf7f9;--crimson:#af004e;--crimson-dark:#7e0038;--crimson2:#d4005f;--blush:#ffd9ea;
+  --surface:#fff;--surface-soft:#f5f0f3;--border:#ecdde6;--border2:#ddc9d5;
+  --text:#1a1118;--muted:#7a5f70;--text3:#b89aaa;
+  --green:#27500a;--green-bg:#eaf3de;--amber:#633806;--amber-bg:#faeeda;--red:#a32d2d;--red-bg:#fcebeb;
+  --s:1;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--text);font-family:Geologica,"Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif;font-size:16px;line-height:1.5}
+button{font-family:inherit;cursor:pointer}
+#deck{display:grid;grid-template-columns:260px 1fr;grid-template-rows:1fr 56px;height:100vh}
+#side{grid-row:1/3;background:#fff;border-right:1px solid var(--border);overflow-y:auto;padding:18px 12px 24px}
+#side .brand{font-weight:700;color:var(--crimson);font-size:18px;padding:4px 10px 14px;display:flex;align-items:center;gap:8px}
+#side .sec{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--text3);padding:14px 10px 4px;font-weight:600}
+#side a{display:flex;gap:8px;align-items:center;padding:7px 10px;border-radius:10px;color:var(--text);text-decoration:none;font-size:14px;cursor:pointer}
+#side a:hover{background:var(--surface-soft)}
+#side a.on{background:var(--blush);color:var(--crimson-dark);font-weight:600}
+#side a .play{font-size:11px;color:var(--crimson)}
+#stage{overflow:auto;position:relative}
+#bar{display:flex;align-items:center;gap:12px;padding:0 20px;border-top:1px solid var(--border);background:#fff}
+#bar .grow{flex:1;height:6px;border-radius:3px;background:var(--surface-soft);overflow:hidden}
+#bar .grow i{display:block;height:100%;background:var(--crimson);transition:width .3s}
+#bar .cnt{font-size:13px;color:var(--muted);min-width:64px;text-align:center}
+.btn{border:1px solid var(--border2);background:#fff;color:var(--text);border-radius:12px;padding:8px 16px;font-size:14px;font-weight:500;transition:.15s}
+.btn:hover{background:var(--surface-soft)}
+.btn.pri{background:var(--crimson);color:#fff;border-color:var(--crimson)}
+.btn.pri:hover{background:var(--crimson-dark)}
+.btn.sm{padding:5px 12px;font-size:13px;border-radius:10px}
+.btn[disabled]{opacity:.4;cursor:default}
+
+.slide{padding:28px 40px 40px;max-width:1280px;margin:0 auto;animation:fade .25s}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.slide h1{font-size:34px;line-height:1.2;margin:0 0 8px;color:var(--crimson-dark)}
+.slide h2{font-size:26px;line-height:1.25;margin:0 0 6px;color:var(--crimson-dark)}
+.slide h3{font-size:16px;margin:18px 0 6px;color:var(--crimson)}
+.slide p{margin:6px 0}
+.lead{font-size:18px;color:var(--muted);max-width:720px}
+.pill{display:inline-block;font-size:12px;font-weight:600;padding:3px 10px;border-radius:20px;background:var(--blush);color:var(--crimson-dark);margin-right:6px}
+.pill.g{background:var(--green-bg);color:var(--green)}
+.pill.a{background:var(--amber-bg);color:var(--amber)}
+.pill.r{background:var(--red-bg);color:var(--red)}
+.split{display:grid;grid-template-columns:minmax(0,1fr) 420px;gap:36px;align-items:start}
+.split.wide{grid-template-columns:minmax(0,1fr) 520px}
+.card{background:#fff;border:1px solid var(--border);border-radius:18px;padding:16px 18px;margin:12px 0}
+.card h4{margin:0 0 6px;font-size:14px;color:var(--crimson);text-transform:uppercase;letter-spacing:.04em}
+.card.now{background:var(--green-bg);border-color:#cfe3b8}
+.card.now h4{color:var(--green)}
+.card.future{background:#f6f0fb;border-color:#e0d3f0}
+.card.future h4{color:#5b3a8c}
+.card.miss{background:var(--amber-bg);border-color:#efd5a8}
+.card.miss h4{color:var(--amber)}
+.card ul,.card ol{margin:4px 0 4px 18px;padding:0}
+.card li{margin:3px 0}
+.grid{display:grid;gap:14px}
+.grid.c2{grid-template-columns:1fr 1fr}.grid.c3{grid-template-columns:repeat(3,1fr)}.grid.c4{grid-template-columns:repeat(4,1fr)}
+.tile{background:#fff;border:1px solid var(--border);border-radius:18px;padding:14px 16px;cursor:pointer;transition:.15s;text-align:left}
+.tile:hover{border-color:var(--crimson);transform:translateY(-2px);box-shadow:0 6px 18px rgba(175,0,78,.1)}
+.tile b{display:block;color:var(--crimson-dark)}
+.tile span{font-size:13px;color:var(--muted)}
+.hero{min-height:calc(100vh - 140px);display:flex;flex-direction:column;justify-content:center;align-items:flex-start}
+.hero h1{font-size:46px}
+.divider{min-height:calc(100vh - 140px);display:flex;flex-direction:column;justify-content:center}
+.divider .num{font-size:90px;font-weight:800;color:var(--blush);line-height:1}
+table.t{width:100%;border-collapse:collapse;font-size:14px;background:#fff;border-radius:14px;overflow:hidden;border:1px solid var(--border)}
+table.t th{background:var(--surface-soft);text-align:left;padding:9px 12px;font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}
+table.t td{padding:9px 12px;border-top:1px solid var(--border);vertical-align:top}
+table.t td.ok{background:var(--green-bg);color:var(--green);text-align:center;font-weight:600}
+table.t td.no{background:var(--red-bg);color:var(--red);text-align:center;font-weight:600}
+table.t td.mid{background:var(--amber-bg);color:var(--amber);text-align:center;font-weight:600}
+table.t td.self{background:var(--surface-soft);text-align:center;color:var(--text3)}
+
+/* phone */
+.phone-wrap{width:420px;height:calc(660px * var(--s));display:flex;justify-content:center;position:sticky;top:12px}
+.phone{width:380px;height:640px;border-radius:38px;background:#1a1118;padding:10px;transform:scale(var(--s));transform-origin:top center;box-shadow:0 20px 50px rgba(126,0,56,.22);flex:none}
+.phone-screen{width:100%;height:100%;border-radius:30px;background:var(--bg);overflow:hidden;position:relative;display:flex;flex-direction:column}
+.app-bar{display:flex;align-items:center;gap:8px;padding:12px 14px 10px;background:#fff;border-bottom:1px solid var(--border);flex:none}
+.app-back{font-size:22px;color:var(--crimson);width:20px}
+.app-title{flex:1;min-width:0;line-height:1.2}
+.app-title b{font-size:15px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.app-title small{font-size:11px;color:var(--muted)}
+.chip{background:var(--blush);color:var(--crimson-dark);font-weight:700;font-size:12px;border-radius:14px;padding:4px 9px;white-space:nowrap}
+.app-body{flex:1;position:relative;overflow:hidden;display:flex;flex-direction:column;align-items:center;padding:8px 8px 10px;user-select:none;-webkit-user-select:none;touch-action:none}
+.g-top{display:flex;gap:6px;align-items:center;justify-content:space-between;width:100%;font-size:13px;color:var(--muted);padding:0 4px 6px;flex:none}
+.g-top b{color:var(--crimson-dark)}
+.g-note{font-size:12px;color:var(--muted);text-align:center;padding:4px 10px;flex:none}
+.tabs{display:flex;gap:6px;margin-bottom:6px;flex:none}
+.tabs button{border:1px solid var(--border2);background:#fff;border-radius:16px;padding:4px 12px;font-size:12px;color:var(--muted)}
+.tabs button.on{background:var(--crimson);color:#fff;border-color:var(--crimson)}
+.overlay{position:absolute;inset:0;background:rgba(250,247,249,.94);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-align:center;padding:24px;z-index:50;animation:fade .25s}
+.overlay h3{margin:0;font-size:22px;color:var(--crimson-dark)}
+.overlay p{margin:0;color:var(--muted);font-size:14px}
+.overlay.lose h3{color:var(--red)}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+.shake{animation:shake .25s}
+@keyframes pop{0%{transform:scale(.8)}60%{transform:scale(1.12)}100%{transform:scale(1)}}
+.pop{animation:pop .3s}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+.bob{animation:bob 1.6s ease-in-out infinite}
+
+/* flasks */
+.flasks{display:grid;grid-template-columns:repeat(3,92px);gap:14px 20px;justify-content:center;margin-top:8px}
+.fl{position:relative;height:150px;display:flex;flex-direction:column;align-items:center;cursor:pointer;transition:transform .15s}
+.fl.sel{transform:translateY(-12px)}
+.fl .glass{width:50px;height:124px;border:3px solid #cdb3c3;border-top:none;border-radius:0 0 22px 22px;background:linear-gradient(90deg,rgba(255,255,255,.7),rgba(255,255,255,.2));display:flex;flex-direction:column-reverse;overflow:hidden;position:relative;margin-top:22px}
+.fl.sel .glass{border-color:var(--crimson)}
+.fl .glass:before{content:"";position:absolute;top:0;left:-3px;right:-3px;height:0}
+.fl .lip{position:absolute;top:18px;width:62px;height:6px;border-radius:4px;background:#cdb3c3}
+.fl.sel .lip{background:var(--crimson)}
+.fl .seg{flex:none;height:25%;width:100%;transition:background .2s;border-top:1px solid rgba(255,255,255,.4)}
+.fl .done{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;animation:pop .4s}
+.fl .done small{font-size:10px;line-height:1.1;text-align:center;color:var(--crimson-dark);font-weight:600;max-width:90px}
+.row-btns{display:flex;gap:8px;margin-top:10px;flex:none}
+
+/* words */
+.wheel{position:relative;width:250px;height:250px;margin:6px auto 0;border-radius:50%;background:#fff;border:1px solid var(--border);touch-action:none}
+.wheel .lt{position:absolute;width:46px;height:46px;margin:-23px 0 0 -23px;border-radius:50%;background:var(--surface-soft);border:2px solid var(--border2);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:20px;color:var(--crimson-dark)}
+.wheel .lt.on{background:var(--crimson);color:#fff;border-color:var(--crimson)}
+.wheel svg{position:absolute;inset:0;pointer-events:none}
+.slots{display:flex;gap:5px;justify-content:center;margin:6px 0;min-height:40px}
+.slots i{width:34px;height:40px;border-radius:8px;border:2px solid var(--border2);background:#fff;display:flex;align-items:center;justify-content:center;font-style:normal;font-weight:700;color:var(--crimson-dark);font-size:18px}
+.slots i.f{background:var(--green-bg);border-color:#9ec47c;color:var(--green)}
+.fw{display:grid;grid-template-columns:repeat(8,38px);gap:2px;justify-content:center;touch-action:none;margin-top:4px}
+.fw div{width:38px;height:38px;border-radius:8px;background:#fff;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:17px;color:var(--text)}
+.fw div.sel{background:var(--blush);border-color:var(--crimson2)}
+.fw div.fd{background:var(--green-bg);border-color:#9ec47c;color:var(--green)}
+.wl{display:flex;flex-wrap:wrap;gap:4px 10px;justify-content:center;font-size:12px;color:var(--muted);margin-top:8px}
+.wl .fd{text-decoration:line-through;color:var(--green)}
+
+/* pyramid */
+.pyr{position:relative;width:340px;height:270px;margin-top:4px;flex:none}
+.tl{position:absolute;width:40px;height:50px;border-radius:9px;background:#fff;border:2px solid var(--border2);box-shadow:0 3px 0 var(--border2);display:flex;align-items:center;justify-content:center;transition:.2s;padding:0}
+.tl.free{border-color:var(--crimson);box-shadow:0 3px 0 var(--crimson)}
+.tl.cov{background:#e6dbe1;cursor:default}
+.tl.cov svg{opacity:.35}
+.hand{display:flex;gap:6px;margin-top:10px;padding:8px;background:#fff;border:1px solid var(--border);border-radius:14px;flex:none}
+.hand .sl{width:46px;height:56px;border-radius:9px;border:2px dashed var(--border2);display:flex;align-items:center;justify-content:center}
+.hand .sl.f{border-style:solid;border-color:var(--crimson);background:var(--blush)}
+
+/* steps */
+.stp{display:flex;flex-direction:column;gap:8px;width:100%;padding:0 6px;margin-top:6px}
+.stp button{border:1.5px solid var(--border2);background:#fff;border-radius:14px;padding:10px 14px;text-align:left;font-size:14px;color:var(--text)}
+.stp button:hover{border-color:var(--crimson)}
+.stp button.ok{background:var(--green-bg);border-color:#9ec47c;color:var(--green)}
+.stp button.bad{background:var(--red-bg);border-color:#e29a9a;color:var(--red)}
+.seq{display:flex;gap:6px;margin:6px 0}
+.seq i{width:30px;height:30px;border-radius:50%;border:2px solid var(--border2);display:flex;align-items:center;justify-content:center;font-style:normal;font-size:13px;color:var(--text3);font-weight:700}
+.seq i.f{background:var(--green);border-color:var(--green);color:#fff}
+
+/* baskets */
+.bk{position:relative;width:340px;height:440px;background:#fff;border:1px solid var(--border);border-radius:16px;overflow:hidden;flex:none;touch-action:none}
+.bk .lane{position:absolute;top:0;bottom:0;border-right:1px dashed var(--border)}
+.bk .jar{position:absolute;width:44px;text-align:center;font-size:9px;line-height:1.1;color:var(--muted);margin-left:-22px}
+.bk .bsk{position:absolute;bottom:6px;height:64px;border-radius:6px 6px 18px 18px;background:var(--blush);border:2px solid var(--crimson2);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;color:var(--crimson-dark);text-align:center;transition:left .5s}
+.bk .bsk.flip{animation:pop .4s}
+.bk .rot{position:absolute;left:0;top:0;height:4px;background:var(--crimson);transition:width .1s linear}
+
+/* find */
+.scene{width:340px;height:330px;border-radius:14px;border:1px solid var(--border);background:#fff;flex:none;touch-action:manipulation}
+.finds{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;width:100%;margin-top:8px;padding:0 6px}
+.finds div{background:#fff;border:1px solid var(--border);border-radius:10px;padding:3px 0 1px;text-align:center;font-size:9px;color:var(--muted);line-height:1.1}
+.finds div.fd{background:var(--green-bg);border-color:#9ec47c;color:var(--green);text-decoration:line-through}
+.tbar{width:100%;height:8px;background:var(--surface-soft);border-radius:4px;overflow:hidden;margin:2px 0 6px;flex:none}
+.tbar i{display:block;height:100%;background:var(--crimson);width:100%}
+
+/* head */
+.headbox{position:relative;width:340px;height:200px;flex:none}
+.menu{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;width:100%;margin-top:6px;padding:0 4px}
+.menu button{border:1.5px solid var(--border2);background:#fff;border-radius:12px;padding:5px 2px;font-size:10px;line-height:1.1;color:var(--text);display:flex;flex-direction:column;align-items:center;gap:2px}
+.menu button.on{border-color:var(--crimson);background:var(--blush)}
+.menu button.dis{opacity:.4}
+.prog{width:100%;height:10px;background:var(--surface-soft);border-radius:5px;overflow:hidden;margin:4px 0;flex:none}
+.prog i{display:block;height:100%;width:0;background:var(--crimson2);transition:width .1s}
+.stepline{display:flex;gap:3px;margin:2px 0 6px;flex:none}
+.stepline i{width:30px;height:8px;border-radius:4px;background:var(--border2)}
+.stepline i.f{background:var(--green)}
+.stepline i.c{background:var(--crimson2)}
+.stepline i.p{box-shadow:0 0 0 2px #3b82c4 inset}
+.role{font-size:12px;padding:3px 10px;border-radius:12px;background:#e6f0fa;color:#1c4f82;font-weight:600}
+.role.me{background:var(--blush);color:var(--crimson-dark)}
+
+/* spa */
+.spa{position:relative;width:344px;height:470px;background:#fbeff5;border-radius:16px;border:1px solid var(--border);overflow:hidden;flex:none;touch-action:manipulation}
+.spa .st{position:absolute;transform:translate(-50%,-50%);border-radius:14px;background:#fff;border:2px solid var(--border2);display:flex;align-items:center;justify-content:center;text-align:center;font-size:10px;line-height:1.1;color:var(--muted);cursor:pointer;padding:2px}
+.spa .st.shelf{width:78px;height:40px;font-size:9px;border-color:var(--crimson2);color:var(--crimson-dark);font-weight:600}
+.spa .st.seat{width:76px;height:64px;background:#eef6fc;border-color:#9bbbd8}
+.spa .st.desk{width:110px;height:44px;background:var(--amber-bg);border-color:#e3b873}
+.spa .st.sink{width:76px;height:64px;background:#e3f0fa;border-color:#6aa2d2}
+.spa .st.door{width:120px;height:28px;border-style:dashed;cursor:default}
+.spa .ppl{position:absolute;width:30px;height:30px;margin:-15px 0 0 -15px;z-index:5;cursor:pointer}
+.spa .chef{z-index:8}
+.spa .chef.sel{filter:drop-shadow(0 0 5px #af004e)}
+.spa .bub{position:absolute;left:50%;bottom:30px;transform:translateX(-50%);background:#fff;border:1px solid var(--border2);border-radius:8px;padding:2px 5px;font-size:9px;width:100px;text-align:center;line-height:1.25;color:var(--text)}
+.spa .pat{position:absolute;left:0;right:0;top:32px;height:4px;background:#ddd;border-radius:2px;overflow:hidden}
+.spa .pat i{display:block;height:100%;background:var(--green)}
+.spa .hold{position:absolute;top:-12px;left:18px;font-size:9px;background:var(--crimson);color:#fff;border-radius:6px;padding:0 4px;white-space:nowrap}
+.spa .work{position:absolute;left:-6px;right:-6px;top:-8px;height:4px;background:#ddd;border-radius:2px;overflow:hidden}
+.spa .work i{display:block;height:100%;background:var(--crimson2)}
+
+/* pair shell */
+.mini{position:absolute;inset:0;display:flex;flex-direction:column;padding:14px;gap:8px;overflow:auto}
+.person{display:flex;align-items:center;gap:10px;padding:8px 10px;border:1.5px solid var(--border);border-radius:14px;background:#fff;cursor:pointer}
+.person.on{border-color:var(--crimson);background:var(--blush)}
+.ava{width:34px;height:34px;border-radius:50%;background:var(--surface-soft);display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--crimson)}
+
+/* settings */
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;width:100%}
+.cal b{font-size:11px;text-align:center;color:var(--text3);font-weight:500}
+.cal button{aspect-ratio:1;border-radius:10px;border:1px solid var(--border);background:#fff;font-size:12px;position:relative;color:var(--text);padding:0}
+.cal button.sh{background:var(--crimson);color:#fff;border-color:var(--crimson)}
+.cal button.off{background:var(--surface-soft);color:var(--text3)}
+.cal button .ev{position:absolute;right:2px;top:0;font-size:10px}
+.note{background:#fff;border:1px solid var(--border);border-radius:12px;padding:8px 10px;font-size:13px;display:flex;gap:8px;justify-content:space-between;width:100%}
+.note button{border:none;background:none;color:var(--text3);font-size:16px}
+input.in,textarea.in{width:100%;border:1.5px solid var(--border2);border-radius:12px;padding:8px 10px;font:inherit;font-size:14px;background:#fff}
+.slider{width:100%;accent-color:var(--crimson)}
+
+/* planner */
+.plan{display:grid;grid-template-columns:repeat(7,1fr);gap:8px}
+.plan label{font-size:12px;font-weight:700;color:var(--crimson-dark);display:block;margin-bottom:2px}
+.plan select{width:100%;padding:7px 4px;border-radius:10px;border:1.5px solid var(--border2);font:inherit;font-size:12px;background:#fff}
+.chk{margin:4px 0;padding:6px 10px;border-radius:10px;font-size:13px}
+.chk.ok{background:var(--green-bg);color:var(--green)}
+.chk.bad{background:var(--red-bg);color:var(--red)}
+.pic{background:#fff;border:1px solid var(--border);border-radius:18px;padding:10px}
+.pic svg{width:100%;height:auto;display:block}
+.cap{font-size:13px;color:var(--muted);text-align:center;margin-top:4px}
+.kbd{font-size:12px;color:var(--muted)}
+@media(max-width:1000px){#deck{grid-template-columns:1fr}#side{display:none}.split,.split.wide{grid-template-columns:1fr}.slide{padding:20px}.phone-wrap{margin:0 auto;position:static}}
+</style>
+</head>
+<body>
+<div id="deck">
+  <nav id="side"></nav>
+  <main id="stage"></main>
+  <div id="bar">
+    <button class="btn prev">← Назад</button>
+    <div class="grow"><i></i></div>
+    <div class="cnt"></div>
+    <button class="btn pri next">Дальше →</button>
+  </div>
+</div>
+<script>(function () {
+  const NS = 'http://www.w3.org/2000/svg';
+  function mk(ns, tag, attrs, kids) {
+    const e = ns ? document.createElementNS(ns, tag) : document.createElement(tag);
+    for (const k in attrs || {}) {
+      const v = attrs[k];
+      if (v == null || v === false) continue;
+      if (k === 'class') e.setAttribute('class', v);
+      else if (k === 'style' && typeof v === 'object') Object.assign(e.style, v);
+      else if (k === 'html') e.innerHTML = v;
+      else if (k.startsWith('on')) e.addEventListener(k.slice(2), v);
+      else e.setAttribute(k, v === true ? '' : v);
+    }
+    const add = (c) => {
+      if (c == null || c === false) return;
+      if (Array.isArray(c)) c.forEach(add);
+      else e.appendChild(c.nodeType ? c : document.createTextNode(String(c)));
+    };
+    kids.forEach(add);
+    return e;
+  }
+  const h = (t, a, ...k) => mk(null, t, a, k);
+  const s = (t, a, ...k) => mk(NS, t, a, k);
+
+  const U = {
+    h, s,
+    rand: (a, b) => a + Math.random() * (b - a),
+    ri: (a, b) => Math.floor(a + Math.random() * (b - a + 1)),
+    pick: (arr) => arr[Math.floor(Math.random() * arr.length)],
+    clamp: (v, a, b) => Math.max(a, Math.min(b, v)),
+    shuffle(arr) {
+      const a = arr.slice();
+      for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+      }
+      return a;
+    },
+    svgURL: (str) => 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(str),
+  };
+
+  const PALETTE = [
+    { c: '#d4005f', name: 'Маска Instant Transformation' },
+    { c: '#e8a33d', name: 'Эликсир Recharging' },
+    { c: '#5aa02c', name: 'Шампунь Multiuse' },
+    { c: '#3b82c4', name: 'Маска с гиалуроном' },
+    { c: '#8b5fbf', name: 'Пилинг Refreshing Exfoliation' },
+  ];
+
+  function flarik(emotion = 'happy', size = 64, extra = '') {
+    const petals = [0, 72, 144, 216, 288]
+      .map((a) => `<ellipse cx="50" cy="22" rx="17" ry="20" fill="#ffd9ea" stroke="#d4005f" stroke-width="2.5" transform="rotate(${a} 50 52)"/>`)
+      .join('');
+    const eyes = {
+      happy: '<path d="M36 50q5-8 10 0M54 50q5-8 10 0" stroke="#1a1118" stroke-width="3" fill="none" stroke-linecap="round"/>',
+      wow: '<circle cx="41" cy="50" r="4.5" fill="#1a1118"/><circle cx="59" cy="50" r="4.5" fill="#1a1118"/>',
+      sleepy: '<path d="M36 51h10M54 51h10" stroke="#1a1118" stroke-width="3" stroke-linecap="round"/><text x="68" y="38" font-size="14" fill="#7a5f70" font-weight="700">z</text>',
+      love: '<path d="M41 55l-6-6a3.5 3.5 0 015-5l1 1 1-1a3.5 3.5 0 015 5z M59 55l-6-6a3.5 3.5 0 015-5l1 1 1-1a3.5 3.5 0 015 5z" fill="#d4005f"/>',
+      wink: '<circle cx="41" cy="50" r="4" fill="#1a1118"/><path d="M54 50q5-7 10 0" stroke="#1a1118" stroke-width="3" fill="none" stroke-linecap="round"/>',
+    }[emotion] || '';
+    const mouth = emotion === 'wow'
+      ? '<ellipse cx="50" cy="66" rx="5" ry="6" fill="#af004e"/>'
+      : emotion === 'sleepy'
+      ? '<path d="M44 66h12" stroke="#af004e" stroke-width="3" stroke-linecap="round"/>'
+      : '<path d="M40 62q10 12 20 0" stroke="#af004e" stroke-width="3" fill="#fff" stroke-linecap="round"/>';
+    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="${size}" height="${size}" ${extra}>${petals}<circle cx="50" cy="52" r="26" fill="#fff0f7" stroke="#d4005f" stroke-width="2.5"/>${eyes}${mouth}<circle cx="34" cy="62" r="4" fill="#ffb3d3" opacity=".8"/><circle cx="66" cy="62" r="4" fill="#ffb3d3" opacity=".8"/></svg>`;
+  }
+
+  function productSVG(kind, color, size = 64) {
+    const lid = '#7e0038';
+    const body = {
+      jar: `<rect x="14" y="30" width="36" height="30" rx="7" fill="${color}"/><rect x="12" y="20" width="40" height="12" rx="4" fill="${lid}"/><rect x="20" y="40" width="24" height="12" rx="3" fill="#fff" opacity=".85"/>`,
+      tube: `<path d="M20 8h24l-3 46H23z" fill="${color}"/><rect x="22" y="54" width="20" height="8" rx="2" fill="${lid}"/><rect x="25" y="22" width="14" height="16" rx="2" fill="#fff" opacity=".85"/>`,
+      bottle: `<rect x="18" y="22" width="28" height="40" rx="8" fill="${color}"/><rect x="26" y="10" width="12" height="13" rx="2" fill="${lid}"/><rect x="22" y="34" width="20" height="16" rx="3" fill="#fff" opacity=".85"/>`,
+      spray: `<rect x="20" y="26" width="24" height="36" rx="7" fill="${color}"/><rect x="28" y="16" width="8" height="11" fill="${lid}"/><rect x="24" y="8" width="18" height="8" rx="3" fill="${lid}"/><rect x="24" y="36" width="16" height="14" rx="3" fill="#fff" opacity=".85"/>`,
+      pump: `<rect x="16" y="26" width="32" height="36" rx="8" fill="${color}"/><rect x="29" y="12" width="6" height="15" fill="${lid}"/><rect x="22" y="6" width="22" height="7" rx="3" fill="${lid}"/><rect x="22" y="36" width="20" height="16" rx="3" fill="#fff" opacity=".85"/>`,
+      dropper: `<circle cx="32" cy="12" r="8" fill="${lid}"/><rect x="28" y="19" width="8" height="38" rx="3" fill="${color}" opacity=".9"/><path d="M29 57h6l-3 6z" fill="${color}"/>`,
+    }[kind];
+    return `<svg viewBox="0 0 64 64" width="${size}" height="${size}" xmlns="http://www.w3.org/2000/svg">${body}</svg>`;
+  }
+
+  const ICONS = {
+    bank: '<rect x="5" y="9" width="14" height="11" rx="3"/><rect x="4" y="4" width="16" height="5" rx="2"/>',
+    drop: '<path d="M12 3c4 5 6 8 6 11a6 6 0 01-12 0c0-3 2-6 6-11z"/>',
+    smear: '<path d="M3 15c3-6 6 4 9-2s6 4 9-2" /><path d="M3 20c3-6 6 4 9-2s6 4 9-2"/>',
+    foam: '<circle cx="8" cy="14" r="4"/><circle cx="16" cy="12" r="5"/><circle cx="12" cy="6" r="3"/>',
+    spray: '<rect x="7" y="9" width="9" height="12" rx="2"/><path d="M10 9V5h4v4M17 4l3-1M17 6h3M17 8l3 1"/>',
+    pipette: '<circle cx="12" cy="5" r="3"/><path d="M10 8h4v10l-2 3-2-3z"/>',
+    cap: '<path d="M3 17a9 9 0 0118 0z"/><path d="M3 20h18"/>',
+    components: '<path d="M12 3l7 4v8l-7 4-7-4V7z"/><circle cx="12" cy="11" r="2"/>',
+    aromas: '<path d="M7 20c-3-4 3-6 0-10s3-6 0-8M14 20c-3-4 3-6 0-10s3-6 0-8"/>',
+  };
+  function icon(name, size = 26, color = '#af004e', fill = 'none') {
+    return `<svg viewBox="0 0 24 24" width="${size}" height="${size}" fill="${fill}" stroke="${color}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${ICONS[name]}</svg>`;
+  }
+
+  const ITEMS = {
+    mask: ['Баночка маски', '<rect x="8" y="16" width="24" height="18" rx="4" fill="#d4005f"/><rect x="7" y="10" width="26" height="7" rx="3" fill="#7e0038"/><rect x="13" y="22" width="14" height="7" rx="2" fill="#fff"/>'],
+    spray: ['Спрей', '<rect x="13" y="18" width="14" height="18" rx="3" fill="#3b82c4"/><rect x="17" y="10" width="6" height="8" fill="#7e0038"/><rect x="14" y="5" width="13" height="5" rx="2" fill="#7e0038"/>'],
+    tube: ['Шампунь', '<path d="M12 5h16l-2 29H14z" fill="#5aa02c"/><rect x="14" y="34" width="12" height="5" rx="1" fill="#7e0038"/><rect x="16" y="14" width="8" height="10" fill="#fff"/>'],
+    pipette: ['Пипетка', '<circle cx="20" cy="8" r="6" fill="#af004e"/><rect x="17" y="13" width="6" height="20" rx="2" fill="#bfe3ee"/><path d="M18 33h4l-2 5z" fill="#bfe3ee"/>'],
+    cap: ['Термошапка', '<path d="M5 27A15 15 0 0135 27z" fill="#d4005f"/><rect x="4" y="27" width="32" height="5" rx="2" fill="#7e0038"/>'],
+    elixir: ['Эликсир', '<rect x="12" y="15" width="16" height="22" rx="5" fill="#e8a33d"/><rect x="16" y="9" width="8" height="7" fill="#7e0038"/><rect x="15" y="22" width="10" height="9" rx="2" fill="#fff"/>'],
+    comb: ['Расчёска', '<rect x="4" y="14" width="32" height="7" rx="3" fill="#8b5fbf"/><path d="M8 21v8M13 21v8M18 21v8M23 21v8M28 21v8M33 21v8" stroke="#8b5fbf" stroke-width="2.5" stroke-linecap="round"/>'],
+    towel: ['Полотенце', '<rect x="7" y="9" width="26" height="24" rx="3" fill="#fff" stroke="#af004e" stroke-width="2"/><path d="M7 16h26M7 26h26" stroke="#ffb3d3" stroke-width="4"/>'],
+    dryer: ['Фен', '<rect x="5" y="9" width="23" height="13" rx="6" fill="#444"/><rect x="26" y="12" width="8" height="7" rx="2" fill="#888"/><rect x="13" y="20" width="8" height="15" rx="3" fill="#444"/>'],
+    scissors: ['Ножницы', '<path d="M12 4l14 22M28 4L14 26" stroke="#666" stroke-width="3" stroke-linecap="round"/><circle cx="12" cy="31" r="5" fill="none" stroke="#af004e" stroke-width="3"/><circle cx="28" cy="31" r="5" fill="none" stroke="#af004e" stroke-width="3"/>'],
+  };
+  function itemSVG(id, size = 36) {
+    return `<svg viewBox="0 0 40 40" width="${size}" height="${size}">${ITEMS[id][1]}</svg>`;
+  }
+
+  function phoneApp(mount, opts) {
+    mount.innerHTML = '';
+    const body = h('div', { class: 'app-body' });
+    mount.append(
+      h('div', { class: 'app-bar' },
+        h('span', { class: 'app-back' }, '‹'),
+        h('div', { class: 'app-title' }, h('b', {}, opts.title), opts.sub ? h('small', {}, opts.sub) : null),
+        opts.reward === false ? null : h('span', { class: 'chip' }, '+{value} 🌸')),
+      body);
+    return body;
+  }
+
+  function result(body, o) {
+    const old = body.querySelector('.overlay');
+    if (old) old.remove();
+    const ov = h('div', { class: 'overlay ' + (o.win ? 'win' : 'lose') });
+    ov.append(h('div', { class: 'bob', html: flarik(o.win ? 'happy' : 'sleepy', 96) }));
+    ov.append(h('h3', {}, o.win ? (o.title || 'Молодец! +{value} 🌸') : (o.title || 'Не получилось')));
+    if (o.text) ov.append(h('p', {}, o.text));
+    if (o.onRetry) ov.append(h('button', { class: 'btn pri', onclick: () => { ov.remove(); o.onRetry(); } }, o.retryLabel || 'Сыграть ещё раз'));
+    body.append(ov);
+    return ov;
+  }
+
+  window.Core = { U, h, s, PALETTE, flarik, productSVG, icon, ICONS, ITEMS, itemSVG, phoneApp, result, NS };
+  window.Games = {};
+})();
+
+window.CATALOG = [
+  {
+    id: 'flasks', game: 'flasks', pair: false, name: 'Колбы «Собери банку»', family: 'Разложить', icon: '🧪',
+    goal: 'Запомнить, как выглядят продукты нашей сети и как они называются. Консультант собирает цветные колбы, и каждая полная колба превращается в настоящую банку продукта.',
+    how: [
+      'На экране шесть колб: четыре с перемешанными цветами и две пустые.',
+      'Нажимаешь на колбу, потом на колбу, куда перелить. Можно лить на такой же цвет или в пустую.',
+      'Когда колба заполнена одним цветом, прозрачная колба превращается в банку продукта с названием. Внешний вид берём из базы продуктов.',
+      'Все четыре банки собраны, значит игра пройдена.',
+    ],
+    now: ['Игра «Сопоставь»: четыре вопроса про продукты месяца, на каждый правильный ответ открывается картинка продукта. Работает на заданиях с выбором ответа, которые уже есть.'],
+    future: 'Отдельный тип задания «игра». Колбы собираются на экране, банки подтягиваются из базы продуктов по сети: для Зелёного яблока те, что продаются в ЗЯ, для Милы те, что продаются в Миле. Продукты берём не только из «продукта месяца», а из всего ассортимента сети.',
+    miss: ['Тип задания «игра» с экраном игры.', 'Фильтр баночек по сети в базе продуктов.', 'Анимация переливания.'],
+    risk: 'Если колб и цветов будет больше, игра станет тяжёлой для быстрого задания. Держим четыре цвета и две пустые.',
+  },
+  {
+    id: 'words', game: 'words', pair: false, name: 'Слова «Собери слова»', family: 'Найти', icon: '🔤',
+    goal: 'Закрепить ключевые слова продукта из гайда: из чего состоит, что делает, как наносится. Слова собираем сами, а не читаем.',
+    how: [
+      'Режим «Круг букв»: буквы лежат по кругу, ты проводишь пальцем и собираешь слово.',
+      'Режим «Филворд»: сетка 8 на 8, слова спрятаны по горизонтали, вертикали и по диагонали, в том числе задом наперёд.',
+      'Слова берём из гайда продукта месяца (в примере: состав шампуня Multiuse Shampoo).',
+      'Собрала все слова, игра пройдена.',
+    ],
+    now: ['Квиз «Допиши слово»: слова с пропущенными буквами из гайда. Работает на задании с вводом/выбором ответа.'],
+    future: 'Игровой экран с кругом букв и филвордом. Список слов команда заполняет в карточке задания: одно поле на слово, максимум шесть. Подходит как мини-игра в конце недели.',
+    miss: ['Экран игры.', 'Поле «список слов» в карточке задания.'],
+    risk: 'Не ставим слова в первый день продукта: консультант ещё не читала гайд.',
+  },
+  {
+    id: 'merge', game: 'merge', pair: false, name: 'Большая банка', family: 'Аркада', icon: '🫙',
+    goal: 'Развлечь и запомнить размеры и линейки продуктов. Игра в духе «большого арбуза»: одинаковые склеиваются в следующий размер.',
+    how: [
+      'Сверху падают маленькие продукты. Ты выбираешь, в какое место упадёт банка: ведёшь пальцем и отпускаешь.',
+      'Две одинаковые склеиваются и становятся следующим размером: от 20 мл до 1000 мл, всего десять размеров.',
+      'Как только собрана самая большая банка, игра заканчивается победой.',
+      'Если банки поднимаются выше пунктирной линии и стоят там, банка переполняется, можно сыграть ещё раз.',
+    ],
+    now: ['Квиз «Расставь по размеру»: от самого маленького до самого большого продукта. Показывает те же размеры, но без игры.'],
+    future: 'Игровой экран с физикой падающих банок. Размеры и картинки берутся из базы продуктов, ряд из десяти размеров собирает команда.',
+    miss: ['Экран игры с физикой.', 'Десять картинок с размерами для ряда.'],
+    risk: 'Нужен хороший баланс, чтобы выигрыш был реален за пару минут.',
+  },
+  {
+    id: 'flyer', game: 'flyer', pair: false, name: 'Пролети кольцо', family: 'Аркада', icon: '🌀', tag: 'Тип игры, как делал Вадим (СЕО)',
+    goal: 'Быстрая весёлая игра на реакцию, которая поддерживает привычку заходить в приложение каждый день.',
+    how: [
+      'Нажатие поднимает банку вверх. Без нажатия она падает вниз.',
+      'Нужно пролетать между блоками и не касаться их.',
+      'Каждый этап заканчивается кольцом в форме Фларика с дыркой: нужно пролететь внутрь.',
+      'Этапов десять. Десятое кольцо финальное: пролетела, значит выиграла.',
+    ],
+    now: ['Нет аналога на текущих механиках. Ближайшее: ситуативка с «быстрым выбором», но это не про реакцию.'],
+    future: 'Игровой экран с простой физикой. Кольцо-Фларик можно менять на блоки в других сезонах. Вместо банки можно запускать другой продукт.',
+    miss: ['Экран игры.', 'Картинка кольца Фларика.'],
+    risk: 'На телефонах с разной скоростью нужна одинаковая сложность. Делаем скорость в пикселях в секунду, а не в кадрах.',
+  },
+  {
+    id: 'pyramid', game: 'pyramid', pair: false, name: 'Собери тройку', family: 'Разложить', icon: '🃏',
+    goal: 'Запомнить значки и понятия: банка, капля, мазок, пена, спрей, пипетка, шапка, компоненты. Они же потом встречаются на карточках продуктов.',
+    how: [
+      'Карты лежат пирамидой в пять уровней. Брать можно только открытые карты.',
+      'Взятая карта идёт в руку. Рука на пять мест.',
+      'Три одинаковые карты в руке исчезают.',
+      'Нужно разобрать всю пирамиду. Если рука заполнена пятью разными, проигрыш.',
+    ],
+    now: ['Квиз «Какой значок к какому описанию». Тот же материал, но без игры.'],
+    future: 'Игровой экран, значки можно менять под месяц. Можно подтягивать иконки компонентов и ароматов из базы.',
+    miss: ['Экран игры.', 'Набор иконок для карт.'],
+    risk: 'Раскладка должна всегда решаться. Мы строим её от обратного, чтобы тройки всегда можно собрать.',
+  },
+  {
+    id: 'steps', game: 'steps', pair: false, name: 'Нажми по порядку', family: 'Кнопки', icon: '🔢',
+    goal: 'Выучить порядок нанесения продукта из гайда. Порядок шагов берём точно из карточки продукта.',
+    how: [
+      'Шаги нанесения стоят на кнопках вперемешку.',
+      'Нужно нажать их в правильном порядке. Подсказок нет.',
+      'Попытка одна. Нажала не то, игра закончилась.',
+      'Выбираем гайд: маска, пилинг, шампунь. В приложении каждый день один гайд.',
+    ],
+    now: ['Это можно сделать уже сейчас: задание «Расставь шаги» на механике ситуативки с последовательным выбором.'],
+    future: 'Отдельный игровой экран. Шаги берутся прямо из карточки продукта, ничего вручную перепечатывать не нужно.',
+    miss: ['Поле «шаги нанесения» в базе продуктов.', 'Ограничение «одна попытка в день».'],
+    risk: 'Не ставим в первый день продукта.',
+  },
+  {
+    id: 'baskets', game: 'baskets', pair: false, name: 'Попади в корзинку', family: 'Разложить', icon: '🧺',
+    goal: 'Научить различать группы продуктов: очищение, увлажнение, несмываемый уход.',
+    how: [
+      'Сверху падают баночки с названиями продуктов. Внизу три корзины.',
+      'Нажимаешь на дорожку, и нижняя баночка перелетает туда.',
+      'Подписи на корзинах меняются местами, поэтому нужно читать, а не запоминать места.',
+      'Нужно положить в корзины правильно пятнадцать баночек. Три ошибки, и игра заканчивается.',
+    ],
+    now: ['Квиз «К какой группе относится продукт»: список продуктов и три варианта.'],
+    future: 'Игровой экран. Группы корзин и список продуктов настраиваются: можно делать по линейкам, а не только по типу ухода.',
+    miss: ['Экран игры.', 'Поле «группа продукта» в базе.'],
+    risk: 'Скорость падения нужно держать мягкой, чтобы не было стресса.',
+  },
+  {
+    id: 'find', game: 'find', pair: false, name: 'Найди на картинке', family: 'Найти', icon: '🔍',
+    goal: 'Развлечь и запомнить, как выглядят продукты и инструменты. Комната в беспорядке, нужно за 45 секунд найти десять предметов.',
+    how: [
+      'Картинка: комната, в которой всё разбросано. Предметы спрятаны среди вещей.',
+      'Внизу список из десяти предметов, которые нужно найти.',
+      'Таймер стартует после первого нажатия. Нашла предмет, нажми на него.',
+      'Нашла все десять до конца таймера, значит победа.',
+    ],
+    now: ['Картинка с метками для ситуативки: «нажми на продукт» на одной фотографии. Работает на задании с выбором.'],
+    future: 'Игровой экран с настоящими иллюстрациями комнаты. Комнату можно менять по сезонам: кабинет, зал, новогодняя комната.',
+    miss: ['Иллюстрации комнат.', 'Экран с таймером.'],
+    risk: 'Комнат нужно несколько, чтобы не повторяться.',
+  },
+  {
+    id: 'head', game: 'head', pair: false, name: 'Уход за волосами', family: 'Уход', icon: '💆',
+    goal: 'Закрепить порядок ухода в салоне: шампунь, пилинг, маска, термозащита, фен. Тут шаги идут по карточкам продуктов Limba Cosmetics.',
+    how: [
+      'Клиентка в кресле. Внизу меню средств: шампунь, пилинг, маска, термозащита, душ, полотенце, фен и одно лишнее (эликсир-масло).',
+      'Выбираешь нужное средство и тапаешь по голове, пока шкала не заполнится.',
+      'Порядок по карточкам: шампунь, смыть, пилинг, смыть, полотенце, маска (3 минуты, не смывая), термозащита, фен.',
+      'Подсказку можно включить или выключить. Играет время и количество ошибок выбора.',
+    ],
+    now: ['Квиз «Что дальше?» с теми же восемью шагами, но без тапов и без головы.'],
+    future: 'Игровой экран с головой клиентки. Шаги, время и названия берём из карточки продукта. Можно делать вариации: окрашенные волосы, поврежденные, кудрявые.',
+    miss: ['Экран игры с головой.', 'Шаги по продуктам в базе.', 'Рисунки эффектов (пена, вода, маска).'],
+    risk: 'Нужно точно сверять шаги с карточками, иначе в игре будет ошибка в регламенте.',
+  },
+  {
+    id: 'secret', game: 'secret', pair: false, name: 'Секрет Фларика', family: 'Слой поверх игр', icon: '🌸', layer: true,
+    goal: 'Дать причину заходить каждую неделю и внимательно смотреть игры. Это не отдельная игра, а скрытый слой поверх любой игры недели.',
+    how: [
+      'Раз в неделю Фларик случайно вылетает или выглядывает в одной из игр этой недели.',
+      'Если консультант его заметила и нажала, открывается карточка с эмоцией.',
+      'Четыре эмоции за месяц собирают секрет. Четвёртая проигрывается: счастливый Фларик приносит подарок.',
+      'Подарок появляется в профиле в разделе «Доступно» и «Мои заказы». Если подарков много, оформляем сразу. Если мало, в конце месяца.',
+    ],
+    now: ['Скрытая карточка в заданиях дня: «найди Фларика» на картинке. Прогресс эмоций живёт в профиле.'],
+    future: 'Слой, который включается в настройках контент-плана на нужные недели. Фларик появляется в случайной игре недели один раз.',
+    miss: ['Хранилище собранных эмоций в профиле.', 'Подарок в «Мои заказы».', 'Правила: когда оформляем сразу, когда в конце месяца.'],
+    risk: 'Не обещаем подарки заранее: консультант не должна чувствовать, что что-то упустила.',
+  },
+];
+
+window.PAIR = [
+  {
+    id: 'pairshell', game: 'pairshell', name: 'Играй с подругой', family: 'Вдвоём: приглашение', icon: '🤝', shell: true,
+    goal: 'Открыть парные задания. Это общая оболочка: ты зовёшь коллегу из своей сети, она принимает или откладывает, потом вы играете в одну из парных игр.',
+    how: ['Выбираешь коллегу из сети и парную игру.', 'Коллеге приходит приглашение.', 'Она может принять или отказаться «пока».', 'Если приняла, вы играете. Если отказалась, обычное задание дня ты выполняешь без неё.'],
+    now: ['Через инвайт, который уже есть в приложении: коллега принимает приглашение, а задание выполняется отдельно у каждой.'],
+    future: 'Приглашение в игру в реальном времени. Игра идёт на двух телефонах.',
+    miss: ['Игра на двух телефонах одновременно.', 'Список коллег одной сети.', 'Уведомление об игре.'],
+    risk: 'Если подруга не отвечает, у консультанта не должно быть чувства, что она «проиграла».',
+  },
+  {
+    id: 'flasks2', game: 'flasks2', name: 'Колбы вдвоём', family: 'Разложить', icon: '🧪',
+    goal: 'Собирать банки по очереди: ты делаешь ход, потом подруга, потом снова ты. Победа общая.',
+    how: ['Одна и та же доска у обеих.', 'Ходите по очереди: один переливает, потом другой.', 'Нужно вместе собрать все четыре банки.', 'В презентации подруга играет сама, чтобы ты видела, как это работает.'],
+    now: ['Две консультантки по очереди выполняют вопросы одной ситуативки.'],
+    future: 'Две консультантки в одной игре на двух телефонах. Общий счёт ходов.',
+    miss: ['Игра на двух телефонах.', 'Очередь ходов.'],
+    risk: 'Если одна уходит из игры, партию нужно сохранять или передавать другой.',
+  },
+  {
+    id: 'head2', game: 'head2', name: 'Уход вдвоём', family: 'Уход', icon: '💇',
+    goal: 'Провести клиентку через уход вдвоём. Роли смешанные: обе берут продукты и обе работают душем.',
+    how: [
+      'Восемь шагов: у каждой по четыре.',
+      'Консультантка 1: шампунь, смыть пилинг, маска, фен.',
+      'Консультантка 2: смыть шампунь, пилинг, полотенце, термозащита.',
+      'В презентации вторую консультантку играет компьютер. Можно поменяться ролями.',
+    ],
+    now: ['Два задания одной недели, которые выполняются в паре и совпадают по продуктам. Результат общий, но игры нет.'],
+    future: 'Игра на двух телефонах с живой подругой. Шаги раздаются по ролям.',
+    miss: ['Игра на двух телефонах.', 'Раздача ролей.'],
+    risk: 'Если пара играет с разной скоростью, нужен таймаут на шаг.',
+  },
+  {
+    id: 'spa', game: 'spa', name: 'Смена вдвоём', family: 'Вдвоём: тяжёлая', icon: '🛁', heavy: true,
+    goal: 'Спа-салон как в «Оверкукд». Приходят клиенты с разными просьбами: помыть голову шампунем, уложить спреем или термозащитой, провести консультацию. Вдвоём успеваете.',
+    how: [
+      'Клиенты ждут у входа. У каждого над головой список просьб и полоска терпения.',
+      'Нажимаешь на повара и потом на то, куда ему идти. Повар может нести баночку или клиента.',
+      'Клиента нужно отвести на нужное место: мойка, кресло, стол консультации. Потом принести нужную баночку и применить.',
+      'Нужно обслужить шестерых. Если трое уходят недовольными, игра закончена.',
+      'В презентации ты управляешь обоими поварами. В приложении у каждой консультантки свой повар.',
+    ],
+    now: ['Парное задание «Смена»: две консультантки выполняют по списку задач и отмечают, кто что сделал. Без реального времени.'],
+    future: 'Игра в реальном времени на двух телефонах. Клиентов и просьбы настраивает команда.',
+    miss: ['Игра в реальном времени.', 'Синхронизация двух телефонов.', 'Списки просьб клиентов.'],
+    risk: 'Самая тяжёлая игра: не ставим чаще одного раза в неделю и только в выходной слот.',
+  },
+];
+
+(function () {
+  const { flarik, itemSVG, icon } = Core;
+  const frame = (title, inner, extra = '') => `<svg viewBox="0 0 220 340" xmlns="http://www.w3.org/2000/svg" font-family="Geologica, system-ui, sans-serif">
+    <rect width="220" height="340" rx="22" fill="#faf7f9" stroke="#ddc9d5" stroke-width="2"/>
+    <rect x="1" y="1" width="218" height="34" rx="21" fill="#fff"/><rect x="1" y="20" width="218" height="15" fill="#fff"/><path d="M1 35H219" stroke="#ecdde6"/>
+    <text x="14" y="25" font-size="16" fill="#af004e">‹</text><text x="32" y="25" font-size="12" font-weight="700" fill="#1a1118">${title}</text>
+    ${inner}${extra}</svg>`;
+  const t = (x, y, s, o = '') => `<text x="${x}" y="${y}" font-size="${o.size || 10}" fill="${o.fill || '#7a5f70'}" text-anchor="${o.a || 'middle'}" font-weight="${o.w || 500}">${s}</text>`;
+
+  const A = {};
+
+  A.candles = () => {
+    const xs = [60, 85, 110, 135, 160];
+    const lab = ['Открой задание дня', 'Выполни его', 'Забери фларики', 'Загляни в профиль', 'Открой «Мои заказы»'];
+    let g = `<rect x="30" y="150" width="160" height="70" rx="10" fill="#ffd9ea" stroke="#d4005f" stroke-width="2"/><path d="M30 170q20 14 40 0t40 0t40 0t40 0" fill="#fff" stroke="#d4005f" stroke-width="2"/><rect x="20" y="220" width="180" height="12" rx="6" fill="#af004e"/>`;
+    xs.forEach((x, i) => {
+      g += `<rect x="${x - 4}" y="112" width="8" height="38" rx="2" fill="${['#ffb3d3', '#fff', '#ffd9ea', '#fff', '#ffb3d3'][i]}" stroke="#af004e" stroke-width="1.5"/>
+      <path d="M${x} 90q8 12 0 22q-8-10 0-22z" fill="${i < 2 ? '#bbb' : '#ffb300'}" opacity="${i < 2 ? .4 : 1}"/>
+      <circle cx="${x}" cy="130" r="0"/>${t(x, 146, i + 1, { fill: '#7e0038', w: 700 })}`;
+    });
+    lab.forEach((l, i) => { g += t(24, 252 + i * 15, i + 1 + '. ' + l, { a: 'start', size: 10, fill: i < 2 ? '#27500a' : '#7a5f70' }); });
+    g += t(110, 70, 'Задуй свечи по порядку', { size: 12, fill: '#7e0038', w: 700 });
+    g += t(110, 56, 'как мы пользуемся приложением', { size: 9 });
+    return frame('Задуй свечи', g);
+  };
+
+  A.gifts = () => {
+    let g = '<rect x="1" y="35" width="218" height="304" fill="#f8eaf1"/><rect x="1" y="250" width="218" height="89" rx="0" fill="#e9d3de"/>';
+    g += '<rect x="14" y="52" width="60" height="50" rx="4" fill="#cfe6f5" stroke="#b89aaa" stroke-width="3"/><rect x="100" y="60" width="106" height="8" fill="#b8896b"/><rect x="130" y="170" width="76" height="60" rx="6" fill="#d9b8c9"/><ellipse cx="90" cy="290" rx="70" ry="22" fill="#f1c6dc"/><rect x="20" y="170" width="50" height="80" rx="6" fill="#c7b8e8"/>';
+    const boxes = [[40, 275, '#d4005f'], [180, 55, '#3b82c4'], [152, 160, '#5aa02c'], [48, 160, '#e8a33d'], [118, 292, '#8b5fbf'], [190, 220, '#d4005f'], [95, 72, '#5aa02c'], [30, 125, '#3b82c4'], [165, 270, '#e8a33d'], [78, 205, '#8b5fbf']];
+    boxes.forEach(([x, y, c], i) => { g += `<g transform="translate(${x} ${y}) rotate(${i * 13 - 30})"><rect x="-9" y="-8" width="18" height="16" rx="2" fill="${c}"/><path d="M0 -8V8M-9 0H9" stroke="#fff" stroke-width="2.5"/><path d="M0 -8q-7-8-8-2q0 4 8 2q8 2 8-2q-1-6-8 2" fill="none" stroke="#fff" stroke-width="1.5"/></g>`; });
+    g += '<g opacity=".9"><rect x="30" y="255" width="40" height="22" rx="4" fill="#cfd8e8"/><rect x="100" y="190" width="34" height="18" rx="4" fill="#f2c9a0"/></g>';
+    g += `<rect x="12" y="44" width="70" height="0"/>`;
+    g += `<rect x="70" y="40" width="80" height="0"/>`;
+    g += `<rect x="62" y="40" width="96" height="16" rx="8" fill="#fff" stroke="#ecdde6"/>${t(110, 52, 'Найдено 3 из 10 · 0:32', { size: 9, fill: '#7e0038', w: 700 })}`;
+    return frame('Подарки в комнате', g);
+  };
+
+  A.tree = () => {
+    let g = '<rect x="1" y="35" width="218" height="304" fill="#14283d"/>';
+    for (let i = 0; i < 24; i++) g += `<circle cx="${(i * 53) % 210 + 6}" cy="${(i * 37) % 280 + 42}" r="1.4" fill="#fff" opacity=".7"/>`;
+    g += '<path d="M110 62l-60 90h30l-45 70h50l-35 55h120l-35-55h50l-45-70h30z" fill="#1f6b3a" stroke="#14502b" stroke-width="2"/><rect x="100" y="277" width="20" height="26" fill="#6b4226"/><path d="M110 50l5 10h11l-9 7 3 11-10-6-10 6 3-11-9-7h11z" fill="#ffd34d"/>';
+    const pts = [[110, 110, '#d4005f'], [90, 150, '#3b82c4'], [135, 160, '#e8a33d'], [70, 200, '#8b5fbf'], [112, 205, '#d4005f'], [152, 212, '#3b82c4'], [95, 245, '#e8a33d'], [140, 250, '#8b5fbf'], [60, 255, '#d4005f'], [165, 255, '#e8a33d']];
+    pts.forEach(([x, y, c], i) => { g += `<circle cx="${x}" cy="${y}" r="7" fill="${c}"/><circle cx="${x - 2}" cy="${y - 2}" r="2" fill="#fff" opacity=".7"/>`; });
+    g += '<path d="M60 130q30 14 80 -4M45 190q60 24 120 -6M38 245q70 22 144 -2" stroke="#ffd34d" stroke-width="2" fill="none" stroke-dasharray="3 5"/>';
+    g += `<rect x="30" y="311" width="160" height="20" rx="10" fill="#fff" opacity=".92"/>${t(110, 325, 'Найди 10 наших баночек на ёлке · 4/10', { size: 9, fill: '#7e0038', w: 700 })}`;
+    g += '<g transform="translate(20 80)">' + itemSVG('mask', 28) + '</g><g transform="translate(168 120)">' + itemSVG('spray', 26) + '</g>';
+    return frame('Найди 10 на ёлке', g);
+  };
+
+  A.clock = () => {
+    let g = '<circle cx="110" cy="120" r="70" fill="#fff" stroke="#af004e" stroke-width="4"/>';
+    for (let i = 0; i < 12; i++) {
+      const a = (i / 12) * Math.PI * 2 - Math.PI / 2;
+      const on = i < 5;
+      g += `<circle cx="${110 + Math.cos(a) * 55}" cy="${120 + Math.sin(a) * 55}" r="${i === 4 ? 9 : 7}" fill="${on ? '#af004e' : '#ffd9ea'}" stroke="#af004e" stroke-width="1.5"/>${t(110 + Math.cos(a) * 55, 124 + Math.sin(a) * 55, i + 1, { size: 9, fill: on ? '#fff' : '#7e0038', w: 700 })}`;
+    }
+    g += `<path d="M110 120L110 80" stroke="#7e0038" stroke-width="3" stroke-linecap="round"/><path d="M110 120L136 130" stroke="#7e0038" stroke-width="3" stroke-linecap="round"/><circle cx="110" cy="120" r="5" fill="#7e0038"/>`;
+    g += t(110, 214, 'Удар 5 из 12', { size: 12, fill: '#7e0038', w: 700 });
+    g += t(110, 232, 'Развилка: чем смываем год?', { size: 10 });
+    g += `<rect x="14" y="244" width="94" height="52" rx="12" fill="#fff" stroke="#af004e" stroke-width="2"/>${t(61, 266, 'Пилинг', { size: 12, fill: '#7e0038', w: 700 })}${t(61, 282, 'на кожу головы', { size: 9 })}`;
+    g += `<rect x="112" y="244" width="94" height="52" rx="12" fill="#fff" stroke="#ddc9d5" stroke-width="2"/>${t(159, 266, 'Маска', { size: 12, fill: '#7e0038', w: 700 })}${t(159, 282, 'для длины', { size: 9 })}`;
+    g += t(110, 322, 'Выбор меняет следующий шаг', { size: 9 });
+    return frame('Двенадцать ударов', g);
+  };
+
+  A.garland = () => {
+    let g = '<rect x="1" y="35" width="218" height="304" fill="#fdf0f6"/>';
+    const rows = 4, per = 8;
+    for (let r = 0; r < rows; r++) {
+      const y = 70 + r * 52;
+      g += `<path d="M10 ${y}Q110 ${y + 26} 210 ${y}" stroke="#2b2b2b" stroke-width="2" fill="none"/>`;
+      for (let i = 0; i < per; i++) {
+        const k = r * per + i;
+        if (k >= 31) break;
+        const x = 18 + (i / (per - 1)) * 184;
+        const yy = y + 26 * Math.sin((i / (per - 1)) * Math.PI) * 0.9 + 4;
+        const lit = k < 17;
+        const c = ['#d4005f', '#e8a33d', '#3b82c4', '#5aa02c'][k % 4];
+        g += `<rect x="${x - 2}" y="${yy - 2}" width="4" height="7" fill="#444"/><circle cx="${x}" cy="${yy + 12}" r="8" fill="${lit ? c : '#d9ccd3'}" ${lit ? 'stroke="#fff" stroke-width="1.5"' : ''}/>${lit ? `<circle cx="${x}" cy="${yy + 12}" r="13" fill="${c}" opacity=".18"/>` : ''}`;
+      }
+    }
+    g += t(110, 290, 'Лампочка за каждый день декабря,', { size: 10 });
+    g += t(110, 304, 'в который закрыто задание дня', { size: 10 });
+    g += `<rect x="62" y="312" width="96" height="20" rx="10" fill="#ffd9ea"/>${t(110, 326, 'Горит 17 из 31', { size: 10, fill: '#7e0038', w: 700 })}`;
+    return frame('Гирлянда декабря', g);
+  };
+
+  A.result = () => frame('Готово', `<g transform="translate(60 80)">${flarik('happy', 100)}</g>${t(110, 210, 'Молодец! +{value} 🌸', { size: 15, fill: '#7e0038', w: 700 })}${t(110, 232, 'Награда придёт в тот же день', { size: 10 })}<rect x="30" y="260" width="160" height="34" rx="12" fill="#af004e"/>${t(110, 282, 'Вернуться на главную', { size: 11, fill: '#fff', w: 600 })}`);
+
+  window.Art = A;
+})();
+
+(function () {
+  const { h, PALETTE, productSVG, U } = Core;
+  const KINDS = ['jar', 'bottle', 'tube', 'pump', 'spray'];
+
+  Games.flasks = function (body, opt = {}) {
+    const pair = !!opt.pair;
+    const colors = PALETTE.slice(0, 4);
+    let state, sel, moves, turn, busy, hist, timers = [], dead = false;
+
+    const later = (fn, ms) => { const t = setTimeout(() => { if (!dead) fn(); }, ms); timers.push(t); };
+
+    function fresh() {
+      let flasks;
+      do {
+        const units = U.shuffle([].concat(...colors.map((_, i) => [i, i, i, i])));
+        flasks = [0, 1, 2, 3].map((i) => units.slice(i * 4, i * 4 + 4));
+        flasks.push([], []);
+      } while (flasks.some((f) => f.length && f.every((x) => x === f[0])));
+      return flasks;
+    }
+    const done = (f) => f.length === 4 && f.every((x) => x === f[0]);
+
+    function reset() {
+      state = fresh(); sel = null; moves = 0; turn = 'me'; busy = false; hist = [];
+      render();
+    }
+
+    function canPour(a, b) {
+      const A = state[a], B = state[b];
+      if (a === b || !A.length || done(A) || B.length >= 4) return 0;
+      if (B.length && B[B.length - 1] !== A[A.length - 1]) return 0;
+      let run = 0;
+      for (let i = A.length - 1; i >= 0 && A[i] === A[A.length - 1]; i--) run++;
+      return Math.min(run, 4 - B.length);
+    }
+    function pour(a, b) {
+      const n = canPour(a, b);
+      if (!n) return false;
+      hist.push(JSON.stringify(state));
+      for (let i = 0; i < n; i++) state[b].push(state[a].pop());
+      moves++;
+      return true;
+    }
+    const doneCount = () => state.filter(done).length;
+
+    function bot() {
+      let best = null, score = -1;
+      for (let a = 0; a < 6; a++) for (let b = 0; b < 6; b++) {
+        const n = canPour(a, b);
+        if (!n) continue;
+        let sc = 0;
+        if (state[b].length) sc = 10 + n; else if (new Set(state[a]).size > 1) sc = 3; else continue;
+        if (sc > score) { score = sc; best = [a, b]; }
+      }
+      if (best) pour(best[0], best[1]);
+      turn = 'me'; busy = false;
+      render();
+      check();
+    }
+
+    function check() {
+      if (doneCount() === 4) {
+        later(() => Core.result(body, {
+          win: true,
+          text: pair ? 'Вы собрали все банки вместе. Ходов на двоих: ' + moves : 'Все банки собраны за ' + moves + ' ходов.',
+          onRetry: reset,
+        }), 500);
+      }
+    }
+
+    function tap(i) {
+      if (busy || turn !== 'me') return;
+      if (sel == null) {
+        if (state[i].length && !done(state[i])) { sel = i; render(); }
+        return;
+      }
+      if (sel === i) { sel = null; render(); return; }
+      const ok = pour(sel, i);
+      sel = null;
+      if (!ok) { render(); return; }
+      render();
+      check();
+      if (pair && doneCount() < 4) {
+        turn = 'friend'; busy = true; render();
+        later(bot, 1100);
+      }
+    }
+
+    function undo() {
+      if (!hist.length || busy) return;
+      state = JSON.parse(hist.pop()); moves = Math.max(0, moves - 1); sel = null; render();
+    }
+
+    function flaskEl(f, i) {
+      const el = h('div', { class: 'fl' + (sel === i ? ' sel' : ''), onclick: () => tap(i) });
+      el.append(h('div', { class: 'lip' }));
+      const glass = h('div', { class: 'glass' });
+      if (done(f)) {
+        const c = colors[f[0]];
+        glass.append(h('div', { class: 'seg', style: { background: c.c, height: '100%', opacity: .25 } }));
+        const d = h('div', { class: 'done' });
+        d.append(h('div', { html: productSVG(KINDS[f[0] % KINDS.length], c.c, 54) }), h('small', {}, c.name));
+        glass.append(d);
+      } else {
+        f.forEach((c) => glass.append(h('div', { class: 'seg', style: { background: colors[c].c } })));
+      }
+      el.append(glass);
+      return el;
+    }
+
+    function render() {
+      body.innerHTML = '';
+      body.append(h('div', { class: 'g-top' },
+        h('span', {}, 'Собрано банок: ', h('b', {}, doneCount() + ' / 4')),
+        pair
+          ? h('span', { class: 'role ' + (turn === 'me' ? 'me' : '') }, turn === 'me' ? 'Твой ход' : 'Ходит подруга…')
+          : h('span', {}, 'Ходов: ', h('b', {}, moves))));
+      body.append(h('div', { class: 'g-note' }, 'Нажми на колбу, потом на колбу, куда перелить. Переливать можно на такой же цвет или в пустую. Когда колба полная одного цвета, она превращается в банку продукта.'));
+      const grid = h('div', { class: 'flasks' });
+      state.forEach((f, i) => grid.append(flaskEl(f, i)));
+      body.append(grid);
+      body.append(h('div', { class: 'row-btns' },
+        h('button', { class: 'btn sm', onclick: undo }, '↶ Шаг назад'),
+        h('button', { class: 'btn sm', onclick: reset }, 'Заново')));
+    }
+
+    reset();
+    return () => { dead = true; timers.forEach(clearTimeout); };
+  };
+})();
+
+(function () {
+  const { h, s, U } = Core;
+
+  Games.words = function (body) {
+    let mode = 'wheel';
+    let dead = false;
+
+    const ROUNDS = [
+      { w: 'СЕРИН', hint: 'Аминокислота из состава Multiuse Shampoo' },
+      { w: 'ПРОЛИН', hint: 'Ещё одна аминокислота из состава шампуня' },
+      { w: 'ЛИЗИН', hint: 'И ещё одна, из того же списка' },
+    ];
+    const FW = ['ШАМПУНЬ', 'СЕРИН', 'ЛИЗИН', 'ПРОЛИН', 'АЛАНИН', 'ГЛИЦИН'];
+
+    function wheel() {
+      let round = 0, picked = [], dragging = false, nodes = [];
+      body.innerHTML = '';
+      body.append(tabs());
+      const info = h('div', { class: 'g-top' });
+      const slots = h('div', { class: 'slots' });
+      const wh = h('div', { class: 'wheel' });
+      const line = s('svg', { width: 250, height: 250 });
+      const poly = s('polyline', { points: '', fill: 'none', stroke: '#d4005f', 'stroke-width': 6, 'stroke-linecap': 'round', 'stroke-linejoin': 'round', opacity: .5 });
+      line.append(poly);
+      body.append(info, slots, wh);
+      body.append(h('div', { class: 'g-note' }, 'Проведи пальцем по буквам по кругу, чтобы собрать слово. Не отпускай, пока не соберёшь до конца.'));
+
+      function setup() {
+        const r = ROUNDS[round];
+        info.innerHTML = '';
+        info.append(h('span', {}, r.hint), h('b', {}, (round + 1) + ' / ' + ROUNDS.length));
+        slots.innerHTML = '';
+        r.w.split('').forEach(() => slots.append(h('i')));
+        wh.innerHTML = ''; wh.append(line);
+        picked = []; poly.setAttribute('points', '');
+        let letters = r.w.split('');
+        let sh;
+        do { sh = U.shuffle(letters); } while (sh.join('') === r.w);
+        nodes = sh.map((ch, i) => {
+          const a = (i / sh.length) * Math.PI * 2 - Math.PI / 2;
+          const n = h('div', { class: 'lt', style: { left: 125 + Math.cos(a) * 88 + 'px', top: 125 + Math.sin(a) * 88 + 'px' } }, ch);
+          n.dataset.i = i; n.dataset.ch = ch;
+          wh.append(n);
+          return n;
+        });
+      }
+      function center(n) { return [parseFloat(n.style.left), parseFloat(n.style.top)]; }
+      function draw() {
+        poly.setAttribute('points', picked.map((n) => center(n).join(',')).join(' '));
+        [...slots.children].forEach((c, i) => { c.textContent = picked[i] ? picked[i].dataset.ch : ''; });
+        nodes.forEach((n) => n.classList.toggle('on', picked.includes(n)));
+      }
+      function hit(e) {
+        const el = document.elementFromPoint(e.clientX, e.clientY);
+        return el && el.classList.contains('lt') && wh.contains(el) ? el : null;
+      }
+      wh.addEventListener('pointerdown', (e) => {
+        const n = hit(e);
+        if (!n) return;
+        dragging = true; picked = [n]; draw();
+        wh.setPointerCapture(e.pointerId);
+      });
+      wh.addEventListener('pointermove', (e) => {
+        if (!dragging) return;
+        const n = hit(e);
+        if (n && !picked.includes(n)) { picked.push(n); draw(); }
+      });
+      const end = () => {
+        if (!dragging) return;
+        dragging = false;
+        const word = picked.map((n) => n.dataset.ch).join('');
+        if (word === ROUNDS[round].w) {
+          [...slots.children].forEach((c) => c.classList.add('f'));
+          setTimeout(() => {
+            if (dead) return;
+            round++;
+            if (round >= ROUNDS.length) Core.result(body, { win: true, text: 'Все три слова из состава собраны.', retryLabel: 'Теперь филворд', onRetry: () => { mode = 'fw'; filword(); } });
+            else setup();
+          }, 600);
+        } else {
+          wh.classList.add('shake');
+          setTimeout(() => { wh.classList.remove('shake'); picked = []; draw(); }, 260);
+        }
+      };
+      wh.addEventListener('pointerup', end);
+      wh.addEventListener('pointercancel', end);
+      setup();
+    }
+
+    function filword() {
+      const N = 8;
+      let grid = null;
+      const dirs = [[1, 0], [0, 1], [1, 1]];
+      function build() {
+        for (let attempt = 0; attempt < 200; attempt++) {
+          const g = Array.from({ length: N }, () => Array(N).fill(''));
+          let ok = true;
+          for (const w of U.shuffle(FW).sort((a, b) => b.length - a.length)) {
+            let placed = false;
+            for (let t = 0; t < 120 && !placed; t++) {
+              const d = U.pick(dirs);
+              const rev = Math.random() < .3;
+              const word = rev ? w.split('').reverse().join('') : w;
+              const x = U.ri(0, N - 1), y = U.ri(0, N - 1);
+              const ex = x + d[0] * (word.length - 1), ey = y + d[1] * (word.length - 1);
+              if (ex >= N || ey >= N) continue;
+              let fit = true;
+              for (let i = 0; i < word.length; i++) {
+                const c = g[y + d[1] * i][x + d[0] * i];
+                if (c && c !== word[i]) { fit = false; break; }
+              }
+              if (!fit) continue;
+              for (let i = 0; i < word.length; i++) g[y + d[1] * i][x + d[0] * i] = word[i];
+              placed = true;
+            }
+            if (!placed) { ok = false; break; }
+          }
+          if (ok) {
+            const abc = 'АБВГДЕЖЗИКЛМНОПРСТУФХЦЧШЭЮЯ';
+            for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) if (!g[y][x]) g[y][x] = U.pick(abc.split(''));
+            return g;
+          }
+        }
+        return null;
+      }
+      grid = build();
+      const found = new Set();
+      const foundCells = new Set();
+      body.innerHTML = '';
+      body.append(tabs());
+      body.append(h('div', { class: 'g-top' }, h('span', {}, 'Слова из состава шампуня Multiuse'), h('b', {}, '0 / ' + FW.length)));
+      const fw = h('div', { class: 'fw' });
+      const cells = [];
+      for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
+        const c = h('div', {}, grid[y][x]);
+        c.dataset.x = x; c.dataset.y = y;
+        cells.push(c); fw.append(c);
+      }
+      const wl = h('div', { class: 'wl' });
+      FW.forEach((w) => { const e = h('span', {}, w); e.dataset.w = w; wl.append(e); });
+      body.append(fw, wl, h('div', { class: 'g-note' }, 'Веди пальцем по прямой линии: вправо, вниз или по диагонали. Слова могут идти и задом наперёд.'));
+
+      let start = null, cur = [];
+      const at = (x, y) => cells[y * N + x];
+      function cellFrom(e) {
+        const el = document.elementFromPoint(e.clientX, e.clientY);
+        return el && fw.contains(el) && el !== fw ? el : null;
+      }
+      function line(a, b) {
+        const dx = b.x - a.x, dy = b.y - a.y;
+        if (dx && dy && Math.abs(dx) !== Math.abs(dy)) return [a];
+        const n = Math.max(Math.abs(dx), Math.abs(dy));
+        const sx = Math.sign(dx), sy = Math.sign(dy);
+        return Array.from({ length: n + 1 }, (_, i) => ({ x: a.x + sx * i, y: a.y + sy * i }));
+      }
+      function paint() {
+        cells.forEach((c) => c.classList.remove('sel'));
+        cur.forEach((p) => at(p.x, p.y).classList.add('sel'));
+      }
+      fw.addEventListener('pointerdown', (e) => {
+        const c = cellFrom(e); if (!c) return;
+        start = { x: +c.dataset.x, y: +c.dataset.y }; cur = [start]; paint();
+        fw.setPointerCapture(e.pointerId);
+      });
+      fw.addEventListener('pointermove', (e) => {
+        if (!start) return;
+        const c = cellFrom(e); if (!c) return;
+        cur = line(start, { x: +c.dataset.x, y: +c.dataset.y }); paint();
+      });
+      const up = () => {
+        if (!start) return;
+        const str = cur.map((p) => grid[p.y][p.x]).join('');
+        const rev = str.split('').reverse().join('');
+        const w = FW.find((x) => !found.has(x) && (x === str || x === rev));
+        if (w) {
+          found.add(w);
+          cur.forEach((p) => foundCells.add(p.y * N + p.x));
+          cells.forEach((c, i) => c.classList.toggle('fd', foundCells.has(i)));
+          wl.querySelector(`[data-w="${w}"]`).classList.add('fd');
+          body.querySelector('.g-top b').textContent = found.size + ' / ' + FW.length;
+          if (found.size === FW.length) setTimeout(() => !dead && Core.result(body, { win: true, text: 'Все слова найдены.', retryLabel: 'Сыграть в круг букв', onRetry: () => { mode = 'wheel'; wheel(); } }), 500);
+        }
+        start = null; cur = []; paint();
+      };
+      fw.addEventListener('pointerup', up);
+      fw.addEventListener('pointercancel', up);
+    }
+
+    function tabs() {
+      return h('div', { class: 'tabs' },
+        h('button', { class: mode === 'wheel' ? 'on' : '', onclick: () => { mode = 'wheel'; wheel(); } }, 'Круг букв'),
+        h('button', { class: mode === 'fw' ? 'on' : '', onclick: () => { mode = 'fw'; filword(); } }, 'Филворд'));
+    }
+
+    wheel();
+    return () => { dead = true; };
+  };
+})();
+
+(function () {
+  const { h, U, productSVG } = Core;
+
+  const TIERS = [
+    { r: 15, vol: '20 мл', kind: 'dropper', col: '#ffd9ea' },
+    { r: 18, vol: '50 мл', kind: 'tube', col: '#ffc2dd' },
+    { r: 22, vol: '120 мл', kind: 'spray', col: '#ffa9cf' },
+    { r: 26, vol: '150 мл', kind: 'bottle', col: '#ff8dbf' },
+    { r: 31, vol: '200 мл', kind: 'pump', col: '#f26aa8' },
+    { r: 36, vol: '245 г', kind: 'jar', col: '#e24891' },
+    { r: 42, vol: '300 мл', kind: 'bottle', col: '#d4005f' },
+    { r: 48, vol: '500 г', kind: 'jar', col: '#af004e' },
+    { r: 55, vol: '750 мл', kind: 'pump', col: '#930043' },
+    { r: 63, vol: '1000 мл', kind: 'bottle', col: '#7e0038' },
+  ];
+
+  Games.merge = function (body) {
+    const W = 340, H = 460, LINE = 74, G = 900;
+    let balls, dropX, cd, next, over, raf, last, high, dead = false, overT, score;
+    const sprites = TIERS.map((t) => {
+      const c = document.createElement('canvas');
+      c.width = c.height = t.r * 2 + 2;
+      const ctx = c.getContext('2d');
+      const img = new Image();
+      img.onload = () => {
+        ctx.beginPath(); ctx.arc(t.r + 1, t.r + 1, t.r, 0, 7);
+        const g = ctx.createRadialGradient(t.r * .7, t.r * .6, 2, t.r, t.r, t.r);
+        g.addColorStop(0, '#fff'); g.addColorStop(1, t.col);
+        ctx.fillStyle = g; ctx.fill();
+        ctx.lineWidth = 2; ctx.strokeStyle = 'rgba(126,0,56,.35)'; ctx.stroke();
+        const sz = t.r * 1.45;
+        ctx.drawImage(img, t.r + 1 - sz / 2, t.r + 1 - sz / 2 - 2, sz, sz);
+        ctx.fillStyle = '#1a1118'; ctx.font = `700 ${Math.max(8, t.r * .3)}px Geologica, sans-serif`; ctx.textAlign = 'center';
+        ctx.fillText(t.vol, t.r + 1, t.r * 1.9 - 2);
+        c.ready = true;
+      };
+      img.src = U.svgURL(productSVG(t.kind, TIERS.indexOf(t) < 6 ? '#af004e' : '#ffd9ea', 64));
+      return c;
+    });
+
+    const canvas = h('canvas', { width: W, height: H, style: { width: W + 'px', height: H + 'px', borderRadius: '16px', border: '1px solid var(--border)', background: '#fff', touchAction: 'none', flex: 'none' } });
+    const ctx = canvas.getContext('2d');
+    const top = h('div', { class: 'g-top' });
+    body.append(top, canvas, h('div', { class: 'g-note' }, 'Выбери, где отпустить банку: веди пальцем и отпусти. Две одинаковые склеиваются в следующий размер. Собери самую большую, и игра закончится.'));
+
+    function reset() {
+      balls = []; dropX = W / 2; cd = 0; over = false; high = 0; overT = 0; score = 0; last = performance.now();
+      next = U.ri(0, 2);
+      const ov = body.querySelector('.overlay'); if (ov) ov.remove();
+      showTop();
+    }
+    function showTop() {
+      top.innerHTML = '';
+      top.append(h('span', {}, 'Собрано: ', h('b', {}, (high ? TIERS[high].vol : '—') + ' (цель 1000 мл)')), h('span', {}, 'Дальше: ', h('b', {}, TIERS[next].vol)));
+    }
+    function drop() {
+      if (over || cd > 0) return;
+      const t = TIERS[next];
+      const x = U.clamp(dropX, t.r + 4, W - t.r - 4);
+      balls.push({ x, y: 36, vx: 0, vy: 40, t: next, r: t.r, age: 0, dead: false });
+      next = U.ri(0, 3); cd = .55; showTop();
+    }
+    function pos(e) {
+      const rc = canvas.getBoundingClientRect();
+      dropX = (e.clientX - rc.left) * (W / rc.width);
+    }
+    canvas.addEventListener('pointerdown', (e) => { pos(e); canvas.setPointerCapture(e.pointerId); });
+    canvas.addEventListener('pointermove', (e) => pos(e));
+    canvas.addEventListener('pointerup', (e) => { pos(e); drop(); });
+
+    function step(dt) {
+      for (const b of balls) {
+        b.vy += G * dt; b.x += b.vx * dt; b.y += b.vy * dt; b.age += dt;
+        b.vx *= .998;
+        if (b.x < b.r) { b.x = b.r; b.vx = Math.abs(b.vx) * .2; }
+        if (b.x > W - b.r) { b.x = W - b.r; b.vx = -Math.abs(b.vx) * .2; }
+        if (b.y > H - b.r) { b.y = H - b.r; b.vy = -Math.abs(b.vy) * .1; b.vx *= .96; }
+      }
+      const add = [];
+      for (let it = 0; it < 3; it++) {
+        for (let i = 0; i < balls.length; i++) {
+          const a = balls[i]; if (a.dead) continue;
+          for (let j = i + 1; j < balls.length; j++) {
+            const b = balls[j]; if (b.dead) continue;
+            const dx = b.x - a.x, dy = b.y - a.y, min = a.r + b.r;
+            const d2 = dx * dx + dy * dy;
+            if (d2 >= min * min || d2 === 0) continue;
+            const d = Math.sqrt(d2);
+            if (a.t === b.t && a.t < 9 && it === 0) {
+              a.dead = b.dead = true;
+              const nt = a.t + 1;
+              add.push({ x: (a.x + b.x) / 2, y: (a.y + b.y) / 2, vx: (a.vx + b.vx) / 2, vy: (a.vy + b.vy) / 2 - 40, t: nt, r: TIERS[nt].r, age: 2, dead: false });
+              score += nt;
+              continue;
+            }
+            const nx = dx / d, ny = dy / d, ov = min - d;
+            const ma = a.r * a.r, mb = b.r * b.r, tm = ma + mb;
+            a.x -= nx * ov * (mb / tm); a.y -= ny * ov * (mb / tm);
+            b.x += nx * ov * (ma / tm); b.y += ny * ov * (ma / tm);
+            const rv = (b.vx - a.vx) * nx + (b.vy - a.vy) * ny;
+            if (rv < 0) {
+              const imp = -rv * 1.1;
+              a.vx -= nx * imp * (mb / tm); a.vy -= ny * imp * (mb / tm);
+              b.vx += nx * imp * (ma / tm); b.vy += ny * imp * (ma / tm);
+            }
+          }
+        }
+      }
+      if (add.length) {
+        balls = balls.filter((b) => !b.dead).concat(add);
+        add.forEach((n) => { if (n.t > high) { high = n.t; showTop(); } });
+        if (high >= 9 && !over) win();
+      }
+    }
+    function win() {
+      over = true;
+      setTimeout(() => !dead && Core.result(body, { win: true, text: 'Собрана банка на 1000 мл. Игра закончена.', onRetry: reset }), 700);
+    }
+
+    function draw() {
+      ctx.clearRect(0, 0, W, H);
+      ctx.setLineDash([6, 6]); ctx.strokeStyle = '#e29a9a'; ctx.beginPath(); ctx.moveTo(0, LINE); ctx.lineTo(W, LINE); ctx.stroke(); ctx.setLineDash([]);
+      for (const b of balls) {
+        const sp = sprites[b.t];
+        if (sp.ready) ctx.drawImage(sp, b.x - b.r - 1, b.y - b.r - 1);
+        else { ctx.fillStyle = TIERS[b.t].col; ctx.beginPath(); ctx.arc(b.x, b.y, b.r, 0, 7); ctx.fill(); }
+      }
+      if (!over) {
+        const t = TIERS[next];
+        const x = U.clamp(dropX, t.r + 4, W - t.r - 4);
+        ctx.globalAlpha = cd > 0 ? .25 : .7;
+        const sp = sprites[next];
+        if (sp.ready) ctx.drawImage(sp, x - t.r - 1, 36 - t.r - 1);
+        ctx.globalAlpha = .25; ctx.strokeStyle = '#af004e'; ctx.setLineDash([3, 5]);
+        ctx.beginPath(); ctx.moveTo(x, 36 + t.r); ctx.lineTo(x, H); ctx.stroke(); ctx.setLineDash([]); ctx.globalAlpha = 1;
+      }
+    }
+
+    function loop(now) {
+      if (dead) return;
+      const dt = Math.min(.033, (now - last) / 1000); last = now;
+      if (!over) {
+        cd = Math.max(0, cd - dt);
+        for (let k = 0; k < 2; k++) step(dt / 2);
+        const risky = balls.some((b) => b.age > 1.4 && b.y - b.r < LINE);
+        overT = risky ? overT + dt : Math.max(0, overT - dt);
+        if (overT > 2) {
+          over = true;
+          Core.result(body, { win: false, title: 'Банка переполнилась', text: 'Склеивай одинаковые чаще, тогда места хватит.', onRetry: reset });
+        }
+      }
+      draw();
+      raf = requestAnimationFrame(loop);
+    }
+    reset();
+    raf = requestAnimationFrame(loop);
+    return () => { dead = true; cancelAnimationFrame(raf); };
+  };
+})();
+
+(function () {
+  const { h, U, productSVG, flarik } = Core;
+
+  Games.flyer = function (body) {
+    const W = 340, H = 460, JX = 90, JR = 12, SPEED = 125;
+    let y, vy, started, over, stage, ents, spawnX, camX, last, raf, dead = false, flash = 0, toSpawn;
+    const jarImg = new Image(); jarImg.src = U.svgURL(productSVG('jar', '#d4005f', 64));
+    const flImg = new Image(); flImg.src = U.svgURL(flarik('happy', 64));
+
+    const canvas = h('canvas', { width: W, height: H, style: { width: W + 'px', height: H + 'px', borderRadius: '16px', border: '1px solid var(--border)', background: '#fff7fb', touchAction: 'none', flex: 'none' } });
+    const ctx = canvas.getContext('2d');
+    canvas.__dbg = () => ({ y, vy, ents, camX, stage, over });
+    const top = h('div', { class: 'g-top' });
+    body.append(top, canvas, h('div', { class: 'g-note' }, 'Тап — банка летит вверх. Между этапами пролетай через кольцо в виде Фларика. Десятое кольцо — финал.'));
+
+    function queueStage(n) {
+      const cnt = 1 + Math.floor((n - 1) / 3);
+      const gap = 168 - n * 4;
+      for (let i = 0; i < cnt; i++) {
+        spawnX += 190;
+        ents.push({ k: 'pipe', x: spawnX, gy: U.rand(130, H - 130), gap, passed: false });
+      }
+      spawnX += 200;
+      ents.push({ k: 'ring', x: spawnX, cy: U.rand(150, H - 150), hr: 46, passed: false, n });
+    }
+
+    function reset() {
+      y = H / 2; vy = 0; started = false; over = false; stage = 1; ents = []; spawnX = 260; camX = 0; flash = 0; last = performance.now();
+      queueStage(1);
+      const ov = body.querySelector('.overlay'); if (ov) ov.remove();
+      showTop();
+    }
+    function showTop() {
+      top.innerHTML = '';
+      const dots = Array.from({ length: 10 }, (_, i) => (i < stage - 1 ? '●' : '○')).join('');
+      top.append(h('span', {}, 'Этап ', h('b', {}, stage + ' / 10')), h('span', { style: { color: 'var(--crimson)', letterSpacing: '1px', fontSize: '12px' } }, dots));
+    }
+    function tap() {
+      if (over) return;
+      started = true; vy = -300;
+    }
+    canvas.addEventListener('pointerdown', tap);
+    const key = (e) => { if (e.code === 'Space' && body.isConnected) { e.preventDefault(); tap(); } };
+    window.addEventListener('keydown', key);
+
+    function lose(txt) {
+      over = true;
+      Core.result(body, { win: false, title: 'Не долетела', text: txt, onRetry: reset });
+    }
+
+    function update(dt) {
+      if (!started) { y = H / 2 + Math.sin(performance.now() / 300) * 6; return; }
+      vy += 900 * dt; y += vy * dt; camX += SPEED * dt;
+      if (y < JR || y > H - JR) return lose('Банка упала. Тапай чаще и ровнее.');
+      for (const e of ents) {
+        const sx = e.x - camX;
+        if (e.k === 'pipe') {
+          if (JX + JR > sx && JX - JR < sx + 46) {
+            if (y - JR < e.gy - e.gap / 2 || y + JR > e.gy + e.gap / 2) return lose('Задела блок. Пробуй ещё.');
+          }
+        } else {
+          const dx = Math.abs(JX - sx);
+          if (!e.passed) {
+            if (dx < 18 && Math.abs(y - e.cy) + JR > e.hr) return lose('Задела кольцо Фларика.');
+            if (sx < JX - 20) {
+              e.passed = true; flash = .5;
+              if (e.n >= 10) { over = true; setTimeout(() => !dead && Core.result(body, { win: true, text: 'Десятое кольцо Фларика пройдено.', onRetry: reset }), 500); }
+              else { stage = e.n + 1; showTop(); queueStage(stage); }
+            }
+          }
+        }
+      }
+      ents = ents.filter((e) => e.x - camX > -120);
+    }
+
+    function draw() {
+      ctx.clearRect(0, 0, W, H);
+      for (const e of ents) {
+        const sx = e.x - camX;
+        if (e.k === 'pipe') {
+          ctx.fillStyle = '#af004e';
+          ctx.fillRect(sx, 0, 46, e.gy - e.gap / 2);
+          ctx.fillRect(sx, e.gy + e.gap / 2, 46, H);
+          ctx.fillStyle = '#7e0038';
+          ctx.fillRect(sx - 4, e.gy - e.gap / 2 - 14, 54, 14);
+          ctx.fillRect(sx - 4, e.gy + e.gap / 2, 54, 14);
+        } else {
+          ctx.lineWidth = 14; ctx.strokeStyle = e.passed ? '#9ec47c' : '#ffb3d3';
+          ctx.beginPath(); ctx.ellipse(sx, e.cy, 16, e.hr + 7, 0, 0, 7); ctx.stroke();
+          ctx.lineWidth = 2.5; ctx.strokeStyle = '#d4005f';
+          ctx.beginPath(); ctx.ellipse(sx, e.cy, 23, e.hr + 14, 0, 0, 7); ctx.stroke();
+          ctx.beginPath(); ctx.ellipse(sx, e.cy, 9, e.hr, 0, 0, 7); ctx.stroke();
+          ctx.fillStyle = '#1a1118';
+          ctx.beginPath(); ctx.arc(sx - 4, e.cy - e.hr - 4, 2.4, 0, 7); ctx.arc(sx + 4, e.cy - e.hr - 4, 2.4, 0, 7); ctx.fill();
+          ctx.strokeStyle = '#af004e'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(sx, e.cy + e.hr + 3, 5, 0.1 * Math.PI, 0.9 * Math.PI); ctx.stroke();
+          ctx.font = '700 11px Geologica, sans-serif'; ctx.fillStyle = '#7e0038'; ctx.textAlign = 'center';
+          ctx.fillText(e.n === 10 ? 'ФИНАЛ' : '#' + e.n, sx, e.cy + e.hr + 32);
+        }
+      }
+      ctx.save(); ctx.translate(JX, y); ctx.rotate(U.clamp(vy / 700, -.6, .8));
+      if (jarImg.complete) ctx.drawImage(jarImg, -17, -17, 34, 34);
+      ctx.restore();
+      if (flash > 0) { ctx.globalAlpha = flash; if (flImg.complete) ctx.drawImage(flImg, W / 2 - 40, 40, 80, 80); ctx.globalAlpha = 1; }
+      if (!started && !over) {
+        ctx.fillStyle = 'rgba(122,95,112,.9)'; ctx.font = '600 14px Geologica, sans-serif'; ctx.textAlign = 'center';
+        ctx.fillText('Тапни, чтобы начать', W / 2, H - 40);
+      }
+    }
+    function loop(now) {
+      if (dead) return;
+      const dt = Math.min(.033, (now - last) / 1000); last = now;
+      if (!over) update(dt);
+      flash = Math.max(0, flash - dt);
+      draw();
+      raf = requestAnimationFrame(loop);
+    }
+    reset();
+    raf = requestAnimationFrame(loop);
+    return () => { dead = true; cancelAnimationFrame(raf); window.removeEventListener('keydown', key); };
+  };
+})();
+
+(function () {
+  const { h, U, icon } = Core;
+  const TYPES = ['bank', 'drop', 'smear', 'foam', 'spray', 'pipette', 'cap', 'components'];
+  const SIZES = [8, 6, 5, 3, 2];
+  const TW = 40, TH = 50, STEP = 34;
+
+  Games.pyramid = function (body) {
+    let tiles, hand, undos, over, timers = [], dead = false;
+    const later = (fn, ms) => timers.push(setTimeout(() => !dead && fn(), ms));
+
+    function layout() {
+      const out = [];
+      SIZES.forEach((n, layer) => {
+        for (let i = 0; i < n; i++) {
+          out.push({ layer, x: 170 + (i - (n - 1) / 2) * (TW + 2) - TW / 2, y: 215 - layer * STEP, gone: false, type: null });
+        }
+      });
+      return out;
+    }
+    const overlap = (a, b) => {
+      const w = Math.min(a.x + TW, b.x + TW) - Math.max(a.x, b.x);
+      const hh = Math.min(a.y + TH, b.y + TH) - Math.max(a.y, b.y);
+      return w > 0 && hh > 0 ? w * hh : 0;
+    };
+    const covered = (t, list) => list.some((u) => !u.gone && u.layer > t.layer && overlap(t, u) > TW * TH * 0.12);
+
+    function build() {
+      for (let attempt = 0; attempt < 300; attempt++) {
+        const ts = layout();
+        const rest = new Set(ts);
+        const types = U.shuffle(TYPES);
+        let ok = true, k = 0;
+        while (rest.size) {
+          const arr = [...rest];
+          const free = arr.filter((t) => !arr.some((u) => u.layer > t.layer && overlap(t, u) > TW * TH * 0.12));
+          if (free.length < 3) { ok = false; break; }
+          const three = U.shuffle(free).slice(0, 3);
+          const ty = types[k++ % types.length];
+          three.forEach((t) => { t.type = ty; rest.delete(t); });
+        }
+        if (ok) return ts;
+      }
+      return layout().map((t, i) => ({ ...t, type: TYPES[i % 8] }));
+    }
+
+    function reset() {
+      tiles = build(); hand = []; undos = 3; over = false;
+      const ov = body.querySelector('.overlay'); if (ov) ov.remove();
+      render();
+    }
+
+    function tap(t) {
+      if (over || t.gone || covered(t, tiles) || hand.length >= 5) return;
+      t.gone = true; hand.push(t);
+      render();
+      const same = hand.filter((x) => x.type === t.type);
+      if (same.length >= 3) {
+        over = true;
+        later(() => {
+          hand = hand.filter((x) => x.type !== t.type);
+          over = false;
+          render();
+          if (!tiles.some((x) => !x.gone) && !hand.length) {
+            over = true;
+            later(() => Core.result(body, { win: true, text: 'Пирамидка разобрана полностью.', onRetry: reset }), 300);
+          }
+        }, 350);
+      } else if (hand.length >= 5) {
+        over = true;
+        later(() => Core.result(body, { win: false, title: 'Рука заполнена', text: 'Пять карт на руках, а тройки нет. Попробуй ещё раз.', onRetry: reset }), 400);
+      }
+    }
+    function undo() {
+      if (over || !undos || !hand.length) return;
+      const t = hand.pop(); t.gone = false; undos--; render();
+    }
+
+    function render() {
+      body.innerHTML = '';
+      const left = tiles.filter((t) => !t.gone).length;
+      body.append(h('div', { class: 'g-top' }, h('span', {}, 'Осталось карт: ', h('b', {}, left)), h('span', {}, 'Возвратов: ', h('b', {}, undos))));
+      const pyr = h('div', { class: 'pyr' });
+      tiles.forEach((t) => {
+        if (t.gone) return;
+        const cov = covered(t, tiles);
+        const el = h('button', { class: 'tl ' + (cov ? 'cov' : 'free'), style: { left: t.x + 'px', top: t.y + 'px', zIndex: t.layer + 1 }, onclick: () => tap(t), html: icon(t.type, 28) });
+        pyr.append(el);
+      });
+      body.append(pyr);
+      const hd = h('div', { class: 'hand' });
+      for (let i = 0; i < 5; i++) hd.append(h('div', { class: 'sl' + (hand[i] ? ' f' : ''), html: hand[i] ? icon(hand[i].type, 30) : '' }));
+      body.append(hd, h('div', { class: 'row-btns' }, h('button', { class: 'btn sm', onclick: undo }, '↶ Вернуть карту'), h('button', { class: 'btn sm', onclick: reset }, 'Заново')));
+      body.append(h('div', { class: 'g-note' }, 'Бери только открытые карты (с розовой рамкой). Три одинаковые в руке исчезают. Рука на 5 мест, не переполни её.'));
+    }
+
+    reset();
+    return () => { dead = true; timers.forEach(clearTimeout); };
+  };
+})();
+
+(function () {
+  const { h, U } = Core;
+
+  const GUIDES = {
+    mask: {
+      tab: 'Маска',
+      title: 'Instant Transformation Mask',
+      steps: ['Вымой голову шампунем', 'Убери излишки влаги полотенцем', 'Нанеси 2–4 нажатия по длине', 'Оставь на 3 минуты, не смывая', 'Приступай к укладке'],
+    },
+    peel: {
+      tab: 'Пилинг',
+      title: 'Refreshing Exfoliation',
+      steps: ['Вымой голову шампунем', 'Нанеси пилинг на влажную кожу головы по проборам', 'Оставь на 5–15 минут', 'Тщательно смой'],
+    },
+    shampoo: {
+      tab: 'Шампунь',
+      title: 'Multiuse Shampoo',
+      steps: ['Нанеси небольшое количество на мокрые волосы и кожу головы', 'Вспень массажными движениями', 'Тщательно смой', 'При необходимости повтори'],
+    },
+  };
+
+  Games.steps = function (body) {
+    let key = 'mask';
+    let timers = [], dead = false;
+
+    function play() {
+      const g = GUIDES[key];
+      let idx = 0, over = false;
+      body.innerHTML = '';
+      body.append(h('div', { class: 'tabs' }, Object.entries(GUIDES).map(([k, v]) =>
+        h('button', { class: k === key ? 'on' : '', onclick: () => { key = k; play(); } }, v.tab))));
+      body.append(h('div', { class: 'g-top' }, h('span', {}, 'Как наносить ' + g.title), h('b', {}, 'одна попытка')));
+      const seq = h('div', { class: 'seq' }, g.steps.map((_, i) => h('i', {}, i + 1)));
+      body.append(seq);
+      const list = h('div', { class: 'stp' });
+      U.shuffle(g.steps.map((t, i) => ({ t, i }))).forEach((o) => {
+        const b = h('button', {}, o.t);
+        b.onclick = () => {
+          if (over || b.classList.contains('ok')) return;
+          if (o.i === idx) {
+            b.classList.add('ok'); seq.children[idx].classList.add('f'); idx++;
+            if (idx === g.steps.length) {
+              over = true;
+              timers.push(setTimeout(() => !dead && Core.result(body, { win: true, text: 'Порядок верный, всё как в гайде.', onRetry: play }), 600));
+            }
+          } else {
+            over = true; b.classList.add('bad', 'shake');
+            [...list.children].forEach((x) => { x.disabled = true; });
+            timers.push(setTimeout(() => !dead && Core.result(body, { win: false, title: 'Не тот шаг', text: 'Это не следующий шаг по гайду. В приложении попытка одна, в презентации можно сыграть снова.', onRetry: play }), 700));
+          }
+        };
+        list.append(b);
+      });
+      body.append(list, h('div', { class: 'g-note' }, 'Нажимай шаги по порядку. Подсказок нет, ошибся и игра закончилась.'));
+    }
+    play();
+    return () => { dead = true; timers.forEach(clearTimeout); };
+  };
+  Games.steps.GUIDES = GUIDES;
+})();
+
+(function () {
+  const { h, U, productSVG } = Core;
+  const CATS = ['Очищение', 'Увлажнение', 'Несмываемый'];
+  const GOODS = [
+    { n: 'Multiuse Shampoo', c: 0, k: 'bottle', col: '#5aa02c' },
+    { n: 'WASH IT', c: 0, k: 'bottle', col: '#3b82c4' },
+    { n: 'Hyaluronic mask', c: 1, k: 'jar', col: '#8b5fbf' },
+    { n: 'Hydro Treatment', c: 1, k: 'jar', col: '#3b82c4' },
+    { n: 'Instant Transformation', c: 1, k: 'jar', col: '#d4005f' },
+    { n: 'Recharging Elixir', c: 2, k: 'dropper', col: '#e8a33d' },
+    { n: 'Glance spray', c: 2, k: 'spray', col: '#d4005f' },
+    { n: 'Mango Cream', c: 2, k: 'tube', col: '#e8a33d' },
+  ];
+
+  Games.baskets = function (body) {
+    const W = 340, HH = 440, LW = W / 3, BASE = HH - 78;
+    let jars, labels, spawnT, rotT, caught, wrong, over, last, raf, dead = false, speed;
+
+    const top = h('div', { class: 'g-top' });
+    const field = h('div', { class: 'bk' });
+    body.append(top, field, h('div', { class: 'g-note' }, 'Баночки падают сверху. Нажми на дорожку, и самая нижняя баночка перелетит туда. Подписи на корзинах меняются местами, смотри внимательно.'));
+    const bsk = [0, 1, 2].map((i) => h('div', { class: 'bsk', style: { left: i * LW + 8 + 'px', width: LW - 16 + 'px' } }));
+    [0, 1, 2].forEach((i) => field.append(h('div', { class: 'lane', style: { left: i * LW + 'px', width: LW + 'px' } })));
+    bsk.forEach((b) => field.append(b));
+    const rot = h('div', { class: 'rot' });
+    field.append(rot);
+    field.addEventListener('pointerdown', (e) => {
+      if (over) return;
+      const rc = field.getBoundingClientRect();
+      const lane = U.clamp(Math.floor(((e.clientX - rc.left) / rc.width) * 3), 0, 2);
+      const cand = jars.filter((j) => j.y < BASE - 30).sort((a, b) => b.y - a.y)[0];
+      if (cand) { cand.lane = lane; cand.el.style.left = lane * LW + LW / 2 + 'px'; }
+    });
+
+    function setLabels(flip) {
+      bsk.forEach((b, i) => { b.textContent = CATS[labels[i]]; if (flip) { b.classList.remove('flip'); void b.offsetWidth; b.classList.add('flip'); } });
+    }
+    function showTop() {
+      top.innerHTML = '';
+      top.append(h('span', {}, 'В корзинах: ', h('b', {}, caught + ' / 15')), h('span', {}, 'Ошибки: ', h('b', {}, wrong + ' / 3')));
+    }
+    function reset() {
+      field.querySelectorAll('.jar').forEach((e) => e.remove());
+      jars = []; labels = U.shuffle([0, 1, 2]); spawnT = 0; rotT = 0; caught = 0; wrong = 0; over = false; speed = 70; last = performance.now();
+      const ov = body.querySelector('.overlay'); if (ov) ov.remove();
+      setLabels(false); showTop();
+    }
+    function spawn() {
+      const g = U.pick(GOODS);
+      const lane = U.ri(0, 2);
+      const el = h('div', { class: 'jar', style: { left: lane * LW + LW / 2 + 'px', top: '0px' }, html: productSVG(g.k, g.col, 38) + '<div>' + g.n + '</div>' });
+      field.append(el);
+      jars.push({ g, lane, y: -50, el });
+    }
+    function loop(now) {
+      if (dead) return;
+      const dt = Math.min(.05, (now - last) / 1000); last = now;
+      if (!over) {
+        spawnT -= dt; rotT += dt;
+        if (spawnT <= 0) { spawn(); spawnT = 1.9; }
+        if (rotT >= 10) { rotT = 0; labels = U.shuffle([0, 1, 2]); setLabels(true); }
+        rot.style.width = (1 - rotT / 10) * 100 + '%';
+        for (const j of jars) {
+          j.y += speed * dt; j.el.style.top = j.y + 'px';
+          if (j.y >= BASE) {
+            j.done = true; j.el.remove();
+            if (labels[j.lane] === j.g.c) caught++; else wrong++;
+            showTop();
+            if (caught >= 15) { over = true; Core.result(body, { win: true, text: 'Пятнадцать баночек разложены по своим корзинам.', onRetry: reset }); }
+            else if (wrong >= 3) { over = true; Core.result(body, { win: false, title: 'Три ошибки', text: 'Три баночки попали не в ту корзину.', onRetry: reset }); }
+          }
+        }
+        jars = jars.filter((j) => !j.done);
+        speed = Math.min(130, speed + dt * 1.2);
+      }
+      raf = requestAnimationFrame(loop);
+    }
+    reset();
+    raf = requestAnimationFrame(loop);
+    return () => { dead = true; cancelAnimationFrame(raf); };
+  };
+})();
+
+(function () {
+  const { h, s, U, ITEMS, itemSVG } = Core;
+
+  const PLACES = {
+    mask: [58, 214, -10, 1.0], spray: [286, 120, 20, 1.0], tube: [152, 292, 70, 1.0], pipette: [40, 88, -35, .95],
+    cap: [214, 232, 5, 1.05], elixir: [268, 276, -15, .95], comb: [108, 150, 15, .95], towel: [176, 60, 0, 1.0],
+    dryer: [92, 288, -20, 1.0], scissors: [242, 170, 40, .9],
+  };
+
+  function rng(seed) { let a = seed; return () => { a |= 0; a = (a + 0x6d2b79f5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+
+  Games.find = function (body) {
+    const TIME = 45;
+    let found, t, over, last, raf, dead = false, started;
+    const ids = Object.keys(PLACES);
+
+    const bar = h('div', { class: 'tbar' }, h('i'));
+    const top = h('div', { class: 'g-top' });
+    const scene = s('svg', { class: 'scene', viewBox: '0 0 340 330' });
+    const list = h('div', { class: 'finds' });
+    body.append(top, bar, scene, list, h('div', { class: 'g-note' }, 'Найди все 10 предметов в комнате, пока не кончилось время. Таймер начнётся после первого нажатия.'));
+
+    function clutter(r, n, over) {
+      const cols = ['#cfd8e8', '#f2c9a0', '#b9d6c1', '#e3b6cf', '#f4e2a3', '#c7b8e8', '#a6c4d9'];
+      let g = '';
+      for (let i = 0; i < n; i++) {
+        const x = r() * 330 + 5, y = 140 + r() * 180, a = r() * 360, c = cols[Math.floor(r() * cols.length)];
+        const kind = Math.floor(r() * 4);
+        const sz = 12 + r() * 18;
+        if (kind === 0) g += `<rect x="${x}" y="${y}" width="${sz * 1.6}" height="${sz}" rx="3" fill="${c}" transform="rotate(${a} ${x} ${y})"/>`;
+        else if (kind === 1) g += `<circle cx="${x}" cy="${y}" r="${sz / 2}" fill="${c}"/>`;
+        else if (kind === 2) g += `<path d="M${x} ${y}q${sz} ${-sz} ${sz * 1.5} 0t${sz * 1.5} 0" stroke="${c}" stroke-width="5" fill="none" stroke-linecap="round" transform="rotate(${a} ${x} ${y})"/>`;
+        else g += `<polygon points="${x},${y} ${x + sz},${y + 4} ${x + sz / 2},${y + sz}" fill="${c}"/>`;
+      }
+      return g;
+    }
+
+    function drawScene() {
+      const r = rng(7);
+      let g = '<rect width="340" height="330" fill="#f8eaf1"/>';
+      g += '<rect y="230" width="340" height="100" fill="#e9d3de"/>';
+      g += '<rect x="22" y="22" width="86" height="76" rx="6" fill="#cfe6f5" stroke="#b89aaa" stroke-width="4"/><path d="M65 22v76M22 60h86" stroke="#b89aaa" stroke-width="3"/>';
+      g += '<rect x="130" y="40" width="190" height="10" fill="#b8896b"/><rect x="150" y="50" width="6" height="10" fill="#8f6a52"/><rect x="290" y="50" width="6" height="10" fill="#8f6a52"/>';
+      g += '<rect x="220" y="150" width="110" height="60" rx="8" fill="#d9b8c9"/><rect x="226" y="140" width="60" height="22" rx="8" fill="#fff"/>';
+      g += '<ellipse cx="170" cy="280" rx="110" ry="30" fill="#f1c6dc"/>';
+      g += '<g pointer-events="none">' + clutter(r, 26, false) + '</g>';
+      ids.forEach((id) => {
+        const p = PLACES[id];
+        g += `<g class="it" data-id="${id}" transform="translate(${p[0]} ${p[1]}) rotate(${p[2]}) scale(${p[3] * .8}) translate(-20 -20)">${ITEMS[id][1]}<rect width="40" height="40" fill="transparent"/></g>`;
+      });
+      g += '<g pointer-events="none" opacity=".92">' + clutter(rng(21), 7, true) + '</g>';
+      scene.innerHTML = g;
+    }
+
+    function showTop() {
+      top.innerHTML = '';
+      top.append(h('span', {}, 'Найдено: ', h('b', {}, found.size + ' / 10')), h('span', {}, 'Время: ', h('b', {}, Math.ceil(t) + ' с')));
+      bar.firstChild.style.width = (t / TIME) * 100 + '%';
+    }
+    function reset() {
+      found = new Set(); t = TIME; over = false; started = false; last = performance.now();
+      drawScene();
+      list.innerHTML = '';
+      ids.forEach((id) => { const e = h('div', { html: itemSVG(id, 26) + '<br>' + ITEMS[id][0] }); e.dataset.id = id; list.append(e); });
+      const ov = body.querySelector('.overlay'); if (ov) ov.remove();
+      showTop();
+    }
+    scene.addEventListener('pointerdown', (e) => {
+      if (over) return;
+      started = true; last = performance.now();
+      const g = e.target.closest('.it');
+      if (g) {
+        const id = g.dataset.id;
+        if (found.has(id)) return;
+        found.add(id);
+        g.insertAdjacentHTML('beforeend', '<circle cx="20" cy="20" r="26" fill="none" stroke="#27500a" stroke-width="3.5"/>');
+        scene.appendChild(g);
+        list.querySelector(`[data-id="${id}"]`).classList.add('fd');
+        showTop();
+        if (found.size === 10) { over = true; setTimeout(() => !dead && Core.result(body, { win: true, text: 'Все 10 предметов найдены.', onRetry: reset }), 600); }
+      } else {
+        scene.classList.remove('shake'); void scene.getBoundingClientRect(); scene.classList.add('shake');
+      }
+    });
+    function loop(now) {
+      if (dead) return;
+      const dt = (now - last) / 1000; last = now;
+      if (started && !over) {
+        t -= dt;
+        if (t <= 0) { t = 0; over = true; showTop(); Core.result(body, { win: false, title: 'Время вышло', text: 'Найдено предметов: ' + found.size + ' из 10.', onRetry: reset }); }
+        else showTop();
+      }
+      raf = requestAnimationFrame(loop);
+    }
+    reset();
+    raf = requestAnimationFrame(loop);
+    return () => { dead = true; cancelAnimationFrame(raf); };
+  };
+})();
+
+(function () {
+  const { h, s, U, productSVG, itemSVG } = Core;
+
+  const SEQ = [
+    { tool: 'shampoo', taps: 10, who: 'A', title: 'Вспенить шампунь', text: 'Multiuse Shampoo: на мокрые волосы и кожу головы, вспенить массажными движениями' },
+    { tool: 'shower', taps: 8, who: 'B', title: 'Смыть шампунь', text: 'Тщательно смыть' },
+    { tool: 'peel', taps: 10, who: 'B', title: 'Нанести пилинг', text: 'Refreshing Exfoliation: на влажную кожу головы по проборам, после шампуня' },
+    { tool: 'shower', taps: 8, who: 'A', title: 'Смыть пилинг', text: 'Тщательно смыть' },
+    { tool: 'towel', taps: 6, who: 'B', title: 'Убрать влагу полотенцем', text: 'Перед маской убираем излишки влаги' },
+    { tool: 'mask', taps: 3, who: 'A', title: 'Нанести маску', text: 'Instant Transformation: 2–4 нажатия по длине, держать 3 минуты, не смывая', wait: 3 },
+    { tool: 'spray', taps: 6, who: 'B', title: 'Термозащита', text: 'Protein Thermal Protection Spray: на подсушенные волосы перед феном, отступив от корней' },
+    { tool: 'dryer', taps: 10, who: 'A', title: 'Уложить феном', text: 'Сушим и укладываем' },
+  ];
+  const TOOLS = [
+    ['shampoo', 'Шампунь', () => productSVG('bottle', '#5aa02c', 32)],
+    ['peel', 'Пилинг', () => productSVG('jar', '#8b5fbf', 32)],
+    ['mask', 'Маска', () => productSVG('jar', '#d4005f', 32)],
+    ['spray', 'Термозащита', () => productSVG('spray', '#3b82c4', 32)],
+    ['shower', 'Душ', () => '<svg viewBox="0 0 40 40" width="32" height="32"><path d="M8 12a12 8 0 0124 0z" fill="#6aa2d2"/><path d="M11 18v6M17 18v10M23 18v6M29 18v10" stroke="#6aa2d2" stroke-width="2.5" stroke-linecap="round"/></svg>'],
+    ['towel', 'Полотенце', () => itemSVG('towel', 32)],
+    ['dryer', 'Фен', () => itemSVG('dryer', 32)],
+    ['elixir', 'Эликсир-масло', () => productSVG('dropper', '#e8a33d', 32)],
+  ];
+  const TOOL_NAME = Object.fromEntries(TOOLS.map((t) => [t[0], t[1]]));
+
+  Games.head = function (body, opt = {}) {
+    const pair = !!opt.pair;
+    let me = 'A', idx, taps, tool, hint, errors, t0, timers = [], dead = false, over, waiting, fx, hairWet;
+    const later = (fn, ms) => { const t = setTimeout(() => !dead && fn(), ms); timers.push(t); return t; };
+
+    const top = h('div', { class: 'g-top' });
+    const line = h('div', { class: 'stepline' });
+    const info = h('div', { class: 'g-note', style: { minHeight: '34px' } });
+    const box = h('div', { class: 'headbox', style: { display: 'flex', justifyContent: 'center' } });
+    const toolIcon = h('div', { style: { position: 'absolute', right: '14px', top: '10px', pointerEvents: 'none' } });
+    const svg = s('svg', { viewBox: '0 10 340 255', width: 267, height: 200 });
+    svg.innerHTML = `<rect x="95" y="218" width="150" height="70" rx="34" fill="#af004e"/>
+      <ellipse id="hb" cx="170" cy="125" rx="100" ry="108" fill="#4a2d20"/>
+      <rect x="150" y="196" width="40" height="30" fill="#e8bfa5"/>
+      <ellipse cx="170" cy="150" rx="66" ry="78" fill="#f6d5c0"/>
+      <path id="hf" d="M100 140C100 62 240 62 240 140C215 104 195 96 170 96C145 96 125 104 100 140Z" fill="#4a2d20"/>
+      <path d="M170 72V96" stroke="#f1cdb6" stroke-width="3"/>
+      <path d="M140 152q8-8 16 0M184 152q8-8 16 0" stroke="#1a1118" stroke-width="3" fill="none" stroke-linecap="round"/>
+      <path d="M154 184q16 14 32 0" stroke="#af004e" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+      <circle cx="136" cy="172" r="7" fill="#ffb3d3" opacity=".7"/><circle cx="204" cy="172" r="7" fill="#ffb3d3" opacity=".7"/>
+      <g id="fx"></g>`;
+    box.append(svg, toolIcon);
+    const prog = h('div', { class: 'prog' }, h('i'));
+    const menu = h('div', { class: 'menu' });
+    const btns = h('div', { class: 'row-btns' });
+    body.append(top, line, box, prog, info, menu, btns);
+
+    const fxG = svg.querySelector('#fx');
+    function spot(inHair) {
+      for (let i = 0; i < 40; i++) {
+        const x = 170 + U.rand(-96, 96), y = 125 + U.rand(-104, 104);
+        const inHairE = ((x - 170) / 98) ** 2 + ((y - 125) / 106) ** 2 < 1;
+        const inFace = ((x - 170) / 62) ** 2 + ((y - 150) / 74) ** 2 < 1;
+        if (inHairE && !inFace) return [x, y];
+      }
+      return [100, 100];
+    }
+    function addFx(kind) {
+      const [x, y] = spot();
+      let e;
+      if (kind === 'foam') e = s('circle', { cx: x, cy: y, r: U.rand(6, 13), fill: '#fff', stroke: '#cfe0ec', 'stroke-width': 1.5, 'data-k': 'foam' });
+      else if (kind === 'peel') e = s('circle', { cx: 170 + U.rand(-34, 34), cy: U.rand(76, 100), r: U.rand(1.5, 3), fill: '#c99a6b', 'data-k': 'peel' });
+      else if (kind === 'mask') e = s('ellipse', { cx: x, cy: y, rx: U.rand(8, 14), ry: U.rand(5, 9), fill: '#ff8dbf', opacity: .6, 'data-k': 'mask' });
+      else if (kind === 'spray') e = s('text', { x, y, 'font-size': U.rand(12, 20), fill: '#3b82c4', 'data-k': 'spray' }, '✦');
+      else if (kind === 'water') e = s('path', { d: `M${x} ${y}q4 7 0 11q-4-4 0-11`, fill: '#6aa2d2', opacity: .8, 'data-k': 'water' });
+      else if (kind === 'wind') e = s('path', { d: `M${x - 20} ${y}q12-8 24 0t24 0`, stroke: '#fff', 'stroke-width': 3, fill: 'none', opacity: .8, 'data-k': 'wind' });
+      if (e) { fxG.append(e); if (kind === 'wind' || kind === 'water') later(() => e.remove(), 500); }
+    }
+    function clearFx(k, part = 1) {
+      const els = [...fxG.querySelectorAll(`[data-k="${k}"]`)];
+      els.slice(0, Math.ceil(els.length * part)).forEach((e) => e.remove());
+    }
+    function hair(c) {
+      svg.querySelector('#hb').setAttribute('fill', c);
+      svg.querySelector('#hf').setAttribute('fill', c);
+    }
+
+    function reset() {
+      idx = 0; taps = 0; tool = null; errors = 0; over = false; waiting = false; hint = true; t0 = null;
+      fxG.innerHTML = ''; hair('#4a2d20'); prog.firstChild.style.width = '0';
+      const ov = body.querySelector('.overlay'); if (ov) ov.remove();
+      renderAll(); startStep();
+    }
+    const mine = () => !pair || SEQ[idx].who === me;
+
+    function renderAll() {
+      top.innerHTML = '';
+      top.append(h('span', {}, 'Шаг ', h('b', {}, Math.min(idx + 1, SEQ.length) + ' / ' + SEQ.length)),
+        pair ? h('span', { class: 'role me' }, 'Ты: консультантка ' + (me === 'A' ? '1' : '2')) : h('span', {}, 'Ошибок: ', h('b', {}, errors)));
+      line.innerHTML = '';
+      SEQ.forEach((st, i) => line.append(h('i', { class: (i < idx ? 'f' : i === idx ? 'c' : '') + (pair && st.who !== me ? ' p' : ''), title: st.title })));
+      menu.innerHTML = '';
+      TOOLS.forEach(([id, name, ic]) => menu.append(h('button', {
+        class: tool === id ? 'on' : (!mine() ? 'dis' : ''),
+        html: ic() + '<span>' + name + '</span>',
+        onclick: () => pickTool(id),
+      })));
+      btns.innerHTML = '';
+      btns.append(h('button', { class: 'btn sm', onclick: () => { hint = !hint; renderAll(); showInfo(); } }, 'Подсказка: ' + (hint ? 'вкл' : 'выкл')));
+      if (pair) btns.append(h('button', { class: 'btn sm', onclick: () => { me = me === 'A' ? 'B' : 'A'; reset(); } }, 'Поменяться ролями'));
+      btns.append(h('button', { class: 'btn sm', onclick: reset }, 'Заново'));
+      toolIcon.innerHTML = tool ? TOOLS.find((t) => t[0] === tool)[2]().replace(/32/g, '46') : '';
+    }
+    function showInfo(msg) {
+      if (over) return;
+      const st = SEQ[idx];
+      if (msg) { info.textContent = msg; return; }
+      if (!mine()) info.textContent = 'Сейчас работает подруга: ' + st.title.toLowerCase() + '. Подожди своего шага.';
+      else if (waiting) info.textContent = 'Маска работает. Держим 3 минуты (в презентации ускорено).';
+      else if (!tool) info.textContent = hint ? 'Возьми средство: ' + st.title.toLowerCase() + '. ' + st.text : 'Какое средство берём сейчас?';
+      else info.textContent = 'Тапай по голове клиентки! ' + (hint ? st.text : '');
+    }
+
+    function startStep() {
+      if (idx >= SEQ.length) return finish();
+      taps = 0; tool = null; waiting = false; prog.firstChild.style.width = '0';
+      renderAll(); showInfo();
+      if (pair && SEQ[idx].who !== me) {
+        const st = SEQ[idx];
+        tool = st.tool; renderAll();
+        let n = 0;
+        const iv = setInterval(() => {
+          if (dead) return clearInterval(iv);
+          n++; applyTap(st, n); prog.firstChild.style.width = (n / st.taps) * 100 + '%';
+          if (n >= st.taps) { clearInterval(iv); later(() => completeStep(), 300); }
+        }, 170);
+        timers.push(iv);
+      }
+    }
+    function pickTool(id) {
+      if (over || !mine() || waiting) return;
+      const st = SEQ[idx];
+      if (id === st.tool) { tool = id; renderAll(); showInfo(); }
+      else {
+        errors++; renderAll();
+        showInfo('Это не то. Нужно: ' + (hint ? TOOL_NAME[st.tool].toLowerCase() : 'другое средство') + '.');
+        box.classList.remove('shake'); void box.offsetWidth; box.classList.add('shake');
+      }
+    }
+    function applyTap(st, n) {
+      const k = st.tool;
+      if (k === 'shampoo') addFx('foam');
+      else if (k === 'shower') { clearFx(idx === 1 ? 'foam' : 'peel', 1 / Math.max(1, st.taps - n + 1)); addFx('water'); }
+      else if (k === 'peel') { addFx('peel'); addFx('peel'); }
+      else if (k === 'towel') { clearFx('water'); hair(n > st.taps / 2 ? '#6a4130' : '#4a2d20'); }
+      else if (k === 'mask') { for (let i = 0; i < 4; i++) addFx('mask'); }
+      else if (k === 'spray') addFx('spray');
+      else if (k === 'dryer') { addFx('wind'); hair(n > st.taps / 2 ? '#8a5a42' : '#6a4130'); }
+    }
+    function tapHead() {
+      if (over || waiting || !mine()) return;
+      const st = SEQ[idx];
+      if (!tool) { showInfo('Сначала возьми средство из меню внизу.'); return; }
+      taps++; applyTap(st, taps);
+      prog.firstChild.style.width = (taps / st.taps) * 100 + '%';
+      box.classList.remove('pop'); void box.offsetWidth; box.classList.add('pop');
+      if (taps >= st.taps) completeStep();
+    }
+    function completeStep() {
+      const st = SEQ[idx];
+      if (st.wait) {
+        waiting = true; showInfo();
+        const t = Date.now();
+        const iv = setInterval(() => {
+          const p = (Date.now() - t) / (st.wait * 1000);
+          prog.firstChild.style.width = Math.min(100, (1 - p) * 100) + '%';
+          if (p >= 1) { clearInterval(iv); idx++; startStep(); }
+        }, 80);
+        timers.push(iv);
+        return;
+      }
+      if (st.tool === 'shower') clearFx(idx === 1 ? 'foam' : 'peel');
+      idx++;
+      startStep();
+    }
+    function finish() {
+      over = true; hair('#9a6648'); renderAll();
+      const sec = Math.round((Date.now() - t0) / 1000);
+      later(() => Core.result(body, {
+        win: true,
+        text: (pair ? 'Клиентка довольна, ритуал сделали вдвоём. ' : 'Клиентка довольна. ') + 'Время: ' + sec + ' с, ошибок с выбором средства: ' + errors + '.',
+        onRetry: reset,
+      }), 400);
+    }
+    box.addEventListener('pointerdown', () => { if (t0 == null) t0 = Date.now(); tapHead(); });
+    menu.addEventListener('pointerdown', () => { if (t0 == null) t0 = Date.now(); });
+    reset();
+    return () => { dead = true; timers.forEach((t) => { clearTimeout(t); clearInterval(t); }); };
+  };
+  Games.head.SEQ = SEQ;
+})();
+
+(function () {
+  const { h, U } = Core;
+
+  const ST = {
+    door: { x: 175, y: 22, cls: 'door', t: 'Вход' },
+    shampoo: { x: 298, y: 170, cls: 'shelf', t: 'Шампунь' },
+    thermal: { x: 298, y: 220, cls: 'shelf', t: 'Термозащита' },
+    glance: { x: 298, y: 270, cls: 'shelf', t: 'Блеск-спрей' },
+    sink: { x: 55, y: 345, cls: 'sink', t: 'Мойка' },
+    seat1: { x: 150, y: 345, cls: 'seat', t: 'Кресло 1' },
+    seat2: { x: 245, y: 345, cls: 'seat', t: 'Кресло 2' },
+    desk: { x: 175, y: 432, cls: 'desk', t: 'Консультация' },
+  };
+  const QUEUE = [{ x: 55, y: 120 }, { x: 165, y: 120 }, { x: 275, y: 120 }];
+  const BOTTLE = { shampoo: 'Шампунь', thermal: 'Термозащита', glance: 'Блеск-спрей' };
+  const ORDERS = [
+    [{ k: 'wash' }],
+    [{ k: 'style', item: 'thermal' }],
+    [{ k: 'style', item: 'glance' }],
+    [{ k: 'consult' }],
+    [{ k: 'wash' }, { k: 'style', item: 'thermal' }],
+    [{ k: 'consult' }, { k: 'wash' }],
+    [{ k: 'wash' }, { k: 'style', item: 'glance' }, { k: 'consult' }],
+  ];
+  const label = (s) => s.k === 'wash' ? 'Помыть голову' : s.k === 'consult' ? 'Консультация' : 'Укладка: ' + BOTTLE[s.item].toLowerCase();
+  const fits = (step, st) => (step.k === 'wash' && st === 'sink') || (step.k === 'style' && (st === 'seat1' || st === 'seat2')) || (step.k === 'consult' && st === 'desk');
+  const needName = (step) => step.k === 'wash' ? 'мойку' : step.k === 'consult' ? 'стол консультации' : 'кресло';
+  const faceSVG = (c, hat) => `<svg viewBox="0 0 30 30" width="30" height="30"><circle cx="15" cy="16" r="12" fill="${c}"/><circle cx="11" cy="15" r="1.6" fill="#1a1118"/><circle cx="19" cy="15" r="1.6" fill="#1a1118"/><path d="M10 20q5 4 10 0" stroke="#1a1118" stroke-width="1.5" fill="none"/>${hat ? '<rect x="7" y="1" width="16" height="7" rx="3" fill="#fff" stroke="#999"/>' : ''}</svg>`;
+
+  Games.spa = function (body) {
+    const GOAL = 6;
+    let chefs, clients, occ, served, lost, spawnT, last, raf, over, dead = false, sel, uid, toastT;
+
+    const top = h('div', { class: 'g-top' });
+    const field = h('div', { class: 'spa' });
+    const toast = h('div', { class: 'g-note', style: { minHeight: '30px' } });
+    body.append(top, field, toast);
+    Object.entries(ST).forEach(([id, s]) => {
+      const e = h('div', { class: 'st ' + s.cls, style: { left: s.x + 'px', top: s.y + 'px' }, onclick: () => command({ kind: id === 'door' ? null : (s.cls === 'shelf' ? 'shelf' : 'station'), id }) }, s.t);
+      s.el = e; field.append(e);
+    });
+
+    function say(m) { toast.textContent = m; clearTimeout(toastT); toastT = setTimeout(() => { toast.textContent = 'Нажми на повара, потом на то, куда ему идти.'; }, 3500); }
+    function showTop() {
+      top.innerHTML = '';
+      top.append(h('span', {}, 'Обслужено: ', h('b', {}, served + ' / ' + GOAL)), h('span', {}, 'Ушли недовольные: ', h('b', {}, lost + ' / 3')));
+    }
+
+    function mkChef(id, col, x, y) {
+      const el = h('div', { class: 'ppl chef', html: faceSVG(col, true) });
+      el.onclick = (e) => { e.stopPropagation(); sel = c; refreshSel(); };
+      const c = { id, x, y, tx: x, ty: y, task: null, hold: null, work: null, el, col };
+      field.append(el);
+      return c;
+    }
+    function refreshSel() { chefs.forEach((c) => c.el.classList.toggle('sel', c === sel)); }
+
+    function reset() {
+      field.querySelectorAll('.ppl').forEach((e) => e.remove());
+      chefs = [mkChef('A', '#f7b9d4', 90, 250), mkChef('B', '#b9d6f7', 220, 250)];
+      sel = chefs[0]; refreshSel();
+      clients = []; occ = {}; served = 0; lost = 0; spawnT = 6; over = false; last = performance.now(); uid = 0;
+      const ov = body.querySelector('.overlay'); if (ov) ov.remove();
+      spawn(); spawn();
+      showTop(); say('Нажми на повара, потом на то, куда ему идти.');
+    }
+
+    function spawn() {
+      const free = QUEUE.findIndex((_, i) => !clients.some((c) => c.where === 'queue' && c.spot === i));
+      if (free < 0) return;
+      const steps = U.pick(ORDERS).map((x) => ({ ...x }));
+      const el = h('div', { class: 'ppl', html: faceSVG(U.pick(['#f6d5c0', '#e8bfa5', '#d9a98a']), false) });
+      const bub = h('div', { class: 'bub' }); const pat = h('div', { class: 'pat' }, h('i'));
+      el.append(bub, pat);
+      const c = { id: uid++, steps, si: 0, where: 'queue', spot: free, x: QUEUE[free].x, y: QUEUE[free].y, patience: 75, el, bub, pat };
+      el.onclick = (e) => { e.stopPropagation(); command({ kind: 'client', c }); };
+      clients.push(c); field.append(el); bubble(c);
+    }
+    function bubble(c) {
+      const s = c.steps[c.si];
+      c.bub.innerHTML = c.steps.map((x, i) => (i < c.si ? '<s>' + label(x) + '</s>' : i === c.si ? '<b>' + label(x) + '</b>' : label(x))).join('<br>');
+      c.bub.style.bottom = 30 + (c.steps.length - 1) * 4 + 'px';
+    }
+
+    function command(t) {
+      if (over || !t.kind) return;
+      const c = sel;
+      if (c.work) { say('Повар занят, подожди секунду.'); return; }
+      c.task = t;
+      if (t.kind === 'client') { c.tx = t.c.x; c.ty = t.c.y; }
+      else { c.tx = ST[t.id].x; c.ty = ST[t.id].y; }
+    }
+
+    function dropClient(c, st) {
+      const cl = c.hold.c;
+      cl.where = st; occ[st] = cl; cl.x = ST[st].x; cl.y = ST[st].y; c.hold = null;
+    }
+    function leave(cl, happy) {
+      if (cl.where in occ || occ[cl.where] === cl) delete occ[cl.where];
+      chefs.forEach((c) => { if (c.hold && c.hold.c === cl) c.hold = null; if (c.work && c.work.c === cl) c.work = null; });
+      clients = clients.filter((x) => x !== cl);
+      cl.el.remove();
+      if (happy) served++; else lost++;
+      showTop();
+      if (served >= GOAL) { over = true; Core.result(body, { win: true, text: 'Смена закончена, все ' + GOAL + ' клиентов довольны.', onRetry: reset }); }
+      else if (lost >= 3) { over = true; Core.result(body, { win: false, title: 'Клиенты ушли', text: 'Трое ушли, не дождавшись. Разделите работу: один носит клиентов, второй средства.', onRetry: reset }); }
+    }
+
+    function act(c) {
+      const t = c.task; c.task = null;
+      if (t.kind === 'shelf') {
+        if (!c.hold) { c.hold = { type: 'b', item: t.id }; }
+        else if (c.hold.type === 'b') { c.hold = c.hold.item === t.id ? null : { type: 'b', item: t.id }; }
+        else say('Руки заняты клиентом.');
+        return;
+      }
+      if (t.kind === 'station') {
+        if (c.hold && c.hold.type === 'client') {
+          const cl = c.hold.c, step = cl.steps[cl.si];
+          if (occ[t.id]) return say('Это место занято.');
+          if (!fits(step, t.id)) return say('Клиенту нужно: ' + label(step).toLowerCase() + '. Веди его на ' + needName(step) + '.');
+          dropClient(c, t.id);
+        }
+        return;
+      }
+      if (t.kind === 'client') {
+        const cl = t.c;
+        if (!clients.includes(cl)) return;
+        if (cl.where === 'queue') {
+          if (c.hold) return say('Сначала освободи руки.');
+          c.hold = { type: 'client', c: cl }; cl.where = 'carried'; return;
+        }
+        if (cl.where === 'carried') return;
+        const step = cl.steps[cl.si];
+        const atRight = fits(step, cl.where);
+        if (atRight) {
+          if (step.k === 'consult' && !c.hold) c.work = { c: cl, t: 0, dur: 2.2 };
+          else if (step.k === 'wash' && c.hold && c.hold.type === 'b' && c.hold.item === 'shampoo') c.work = { c: cl, t: 0, dur: 1.8 };
+          else if (step.k === 'style' && c.hold && c.hold.type === 'b' && c.hold.item === step.item) c.work = { c: cl, t: 0, dur: 1.8 };
+          else say('Тут нужно: ' + label(step).toLowerCase() + (step.k === 'consult' ? ' (руки свободны).' : '. Возьми ' + (step.k === 'wash' ? 'шампунь' : BOTTLE[step.item].toLowerCase()) + ' с полки.'));
+        } else if (!c.hold) {
+          delete occ[cl.where]; c.hold = { type: 'client', c: cl }; cl.where = 'carried';
+        } else say('Клиента нужно перевести: освободи руки и возьми его.');
+      }
+    }
+
+    function loop(now) {
+      if (dead) return;
+      const dt = Math.min(.05, (now - last) / 1000); last = now;
+      if (!over) {
+        spawnT -= dt;
+        if (spawnT <= 0) { spawn(); spawnT = 11; }
+        for (const c of chefs) {
+          if (c.work) {
+            c.work.t += dt;
+            if (c.work.t >= c.work.dur) {
+              const cl = c.work.c, step = cl.steps[cl.si];
+              c.work = null;
+              if (step.k !== 'consult') c.hold = null;
+              cl.si++;
+              if (cl.si >= cl.steps.length) leave(cl, true); else { bubble(cl); say('Дальше клиенту: ' + label(cl.steps[cl.si]).toLowerCase() + '.'); }
+            }
+          } else if (c.task) {
+            const dx = c.tx - c.x, dy = c.ty - c.y, d = Math.hypot(dx, dy);
+            if (c.task.kind === 'client') { c.tx = c.task.c.x; c.ty = c.task.c.y; }
+            if (d < 30) act(c);
+            else { const v = 150 * dt; c.x += (dx / d) * Math.min(v, d); c.y += (dy / d) * Math.min(v, d); }
+          }
+        }
+        for (const cl of clients.slice()) {
+          cl.patience -= dt * (cl.where === 'queue' ? 1 : .7);
+          if (cl.patience <= 0) { leave(cl, false); continue; }
+          cl.pat.firstChild.style.width = Math.max(0, cl.patience / 75) * 100 + '%';
+          cl.pat.firstChild.style.background = cl.patience < 20 ? '#a32d2d' : cl.patience < 40 ? '#e8a33d' : '#27500a';
+        }
+      }
+      for (const c of chefs) {
+        c.el.style.left = c.x + 'px'; c.el.style.top = c.y + 'px';
+        let hl = c.el.querySelector('.hold'); let wk = c.el.querySelector('.work');
+        const txt = c.hold ? (c.hold.type === 'b' ? BOTTLE[c.hold.item] : 'клиент') : '';
+        if (txt) { if (!hl) { hl = h('div', { class: 'hold' }); c.el.append(hl); } hl.textContent = txt; } else if (hl) hl.remove();
+        if (c.work) { if (!wk) { wk = h('div', { class: 'work' }, h('i')); c.el.append(wk); } wk.firstChild.style.width = (c.work.t / c.work.dur) * 100 + '%'; } else if (wk) wk.remove();
+      }
+      for (const cl of clients) {
+        const holder = chefs.find((c) => c.hold && c.hold.c === cl);
+        if (holder) { cl.x = holder.x; cl.y = holder.y - 24; }
+        else if (cl.where === 'queue') { cl.x = QUEUE[cl.spot].x; cl.y = QUEUE[cl.spot].y; }
+        cl.el.style.left = cl.x + 'px'; cl.el.style.top = cl.y + 'px';
+        cl.el.style.zIndex = holder ? 9 : 5;
+      }
+      raf = requestAnimationFrame(loop);
+    }
+    reset();
+    raf = requestAnimationFrame(loop);
+    return () => { dead = true; cancelAnimationFrame(raf); clearTimeout(toastT); };
+  };
+})();
+
+(function () {
+  const { h, flarik } = Core;
+  const FRIENDS = [['А', 'Алина', 'Лэтуаль, ТЦ рядом'], ['О', 'Ольга', 'Мила'], ['К', 'Карина', 'Зелёное яблоко']];
+  const GAMES = ['Колбы вдвоём', 'Уход вдвоём', 'Смена вдвоём'];
+
+  Games.pairshell = function (body) {
+    let side = 'me', st = 'pick', friend = 0, game = 0;
+
+    function render() {
+      body.innerHTML = '';
+      body.style.padding = '0';
+      const box = h('div', { class: 'mini' });
+      body.append(box);
+      box.append(h('div', { class: 'tabs' },
+        h('button', { class: side === 'me' ? 'on' : '', onclick: () => { side = 'me'; render(); } }, 'Мой телефон'),
+        h('button', { class: side === 'fr' ? 'on' : '', onclick: () => { side = 'fr'; render(); } }, 'Телефон подруги')));
+      if (side === 'me') mine(box); else hers(box);
+    }
+    function mine(box) {
+      if (st === 'pick') {
+        box.append(h('b', {}, 'Позови подругу в парную игру'), h('div', { class: 'g-note', style: { textAlign: 'left', padding: 0 } }, 'Выбери коллегу из своей сети и игру. Ей придёт приглашение.'));
+        FRIENDS.forEach((f, i) => box.append(h('div', { class: 'person' + (i === friend ? ' on' : ''), onclick: () => { friend = i; render(); } }, h('div', { class: 'ava' }, f[0]), h('div', {}, h('b', {}, f[1]), h('br'), h('small', { style: { color: 'var(--muted)' } }, f[2])))));
+        box.append(h('div', { class: 'tabs', style: { flexWrap: 'wrap' } }, GAMES.map((g, i) => h('button', { class: i === game ? 'on' : '', onclick: () => { game = i; render(); } }, g))));
+        box.append(h('button', { class: 'btn pri', onclick: () => { st = 'sent'; render(); } }, 'Позвать ' + FRIENDS[friend][1]));
+      } else if (st === 'sent') {
+        box.append(h('div', { style: { textAlign: 'center', marginTop: '40px' } }, h('div', { class: 'bob', html: flarik('wink', 90) }), h('b', {}, 'Ждём ответ от ' + FRIENDS[friend][1]), h('p', { class: 'g-note' }, 'Приглашение отправлено. Переключись на «Телефон подруги», чтобы ответить за неё.')));
+      } else if (st === 'ok') {
+        box.append(h('div', { style: { textAlign: 'center', marginTop: '30px' } }, h('div', { class: 'bob', html: flarik('happy', 90) }), h('b', {}, FRIENDS[friend][1] + ' согласилась'), h('p', { class: 'g-note' }, 'Играете: ' + GAMES[game] + '. Награду {value} 🌸 получает каждая из вас, когда вы вместе проходите игру.'), h('button', { class: 'btn pri', onclick: () => { st = 'pick'; render(); } }, 'Заново')));
+      } else if (st === 'no') {
+        box.append(h('div', { style: { textAlign: 'center', marginTop: '30px' } }, h('div', { html: flarik('sleepy', 90) }), h('b', {}, FRIENDS[friend][1] + ' пока занята'), h('p', { class: 'g-note' }, 'Ничего страшного: можно позвать другую коллегу или сыграть позже. Обычное задание дня ты выполняешь в любом случае.'), h('button', { class: 'btn pri', onclick: () => { st = 'pick'; render(); } }, 'Позвать другую')));
+      }
+    }
+    function hers(box) {
+      if (st === 'sent') {
+        box.append(h('div', { style: { textAlign: 'center', marginTop: '30px' } }, h('div', { class: 'bob', html: flarik('wow', 90) }), h('b', {}, 'Коллега из сети зовёт тебя играть'), h('p', { class: 'g-note' }, GAMES[game] + '. Игра на двоих, вам нужно работать вместе.'),
+          h('div', { class: 'row-btns', style: { justifyContent: 'center' } }, h('button', { class: 'btn pri', onclick: () => { st = 'ok'; side = 'me'; render(); } }, 'Принять'), h('button', { class: 'btn', onclick: () => { st = 'no'; side = 'me'; render(); } }, 'Не сейчас'))));
+      } else box.append(h('div', { class: 'g-note', style: { marginTop: '40px' } }, 'Приглашений пока нет. Сначала позови подругу на вкладке «Мой телефон».'));
+    }
+    render();
+    return () => {};
+  };
+})();
+
+(function () {
+  const { h, flarik } = Core;
+
+  Games.calendar = function (body) {
+    const days = Array(31).fill(0);
+    [1, 2, 4, 5, 8, 9, 11, 12].forEach((d) => { days[d - 1] = 1; });
+    const EV = { 1: 'Старт продукта месяца', 15: 'Неделя парных игр', 28: 'Итоги месяца и подарки' };
+    let msg = 'Нажимай на день: смена, выходной, пусто.';
+    function render() {
+      body.innerHTML = '';
+      body.style.justifyContent = 'flex-start';
+      body.append(h('div', { class: 'g-top' }, h('b', {}, 'Мои смены'), h('span', {}, 'Сеть: Зелёное яблоко')));
+      const cal = h('div', { class: 'cal' });
+      ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'].forEach((d) => cal.append(h('b', {}, d)));
+      for (let i = 0; i < 2; i++) cal.append(h('span'));
+      days.forEach((v, i) => {
+        const d = i + 1;
+        cal.append(h('button', {
+          class: v === 1 ? 'sh' : v === 2 ? 'off' : '',
+          onclick: () => {
+            days[i] = (days[i] + 1) % 3;
+            msg = EV[d] ? '🌸 ' + d + '-е: ' + EV[d] : 'День ' + d + ': ' + ['пусто', 'моя смена', 'выходной'][days[i]];
+            render();
+          },
+        }, d, EV[d] ? h('span', { class: 'ev' }, '🌸') : null));
+      });
+      body.append(cal);
+      body.append(h('div', { class: 'g-note', style: { marginTop: '10px', fontSize: '13px', color: 'var(--text)' } }, msg));
+      body.append(h('div', { class: 'g-note' }, 'Смены ставишь сама. Розовым цветком отмечены важные события Фларио. Заданий дня в календаре нет, они живут на главной.'));
+      body.append(h('div', { class: 'g-top', style: { marginTop: 'auto' } }, h('span', {}, 'Смен в месяце: ', h('b', {}, days.filter((x) => x === 1).length))));
+    }
+    render();
+    return () => {};
+  };
+
+  Games.notes = function (body) {
+    let notes = ['Вспомнить про новый уход у стойки', 'Спросить про акцию на следующей неделе'];
+    function render() {
+      body.innerHTML = '';
+      body.style.justifyContent = 'flex-start';
+      body.append(h('div', { class: 'g-top' }, h('b', {}, 'Мои заметки'), h('span', { class: 'pill g' }, 'видишь только ты')));
+      const inp = h('textarea', { class: 'in', rows: 2, placeholder: 'Что записать?' });
+      body.append(inp, h('button', { class: 'btn pri sm', style: { margin: '8px 0', alignSelf: 'flex-end' }, onclick: () => { if (inp.value.trim()) { notes.unshift(inp.value.trim()); render(); } } }, 'Добавить'));
+      const list = h('div', { style: { display: 'flex', flexDirection: 'column', gap: '6px', width: '100%', overflow: 'auto' } });
+      notes.forEach((n, i) => list.append(h('div', { class: 'note' }, h('span', {}, n), h('button', { onclick: () => { notes.splice(i, 1); render(); }, title: 'Удалить' }, '✕'))));
+      if (!notes.length) list.append(h('div', { class: 'g-note' }, 'Заметок пока нет.'));
+      body.append(list);
+    }
+    render();
+    return () => {};
+  };
+
+  Games.network = function (body) {
+    let p = 55;
+    const STAGES = [
+      [0, 'sleepy', 'Фларик спит', .8],
+      [20, 'wink', 'Фларик приоткрыл глаз', .9],
+      [40, 'happy', 'Фларик проснулся', 1],
+      [60, 'wow', 'Фларик машет всей сети', 1.08],
+      [80, 'love', 'Фларик танцует', 1.15],
+    ];
+    function render() {
+      const st = [...STAGES].reverse().find((s) => p >= s[0]);
+      body.innerHTML = '';
+      body.style.justifyContent = 'flex-start';
+      body.append(h('div', { class: 'g-top' }, h('b', {}, 'Главная'), h('span', {}, 'Сеть: Зелёное яблоко')));
+      body.append(h('div', { style: { margin: '22px 0 8px', transform: 'scale(' + st[3] + ')', transition: '.3s' }, class: p >= 80 ? 'bob' : '', html: flarik(st[1], 150) }));
+      body.append(h('b', { style: { color: 'var(--crimson-dark)' } }, st[2]));
+      body.append(h('div', { class: 'prog', style: { width: '85%', height: '14px', margin: '10px 0 4px' } }, h('i', { style: { width: p + '%' } })));
+      body.append(h('div', { class: 'g-note' }, 'Заданий выполнила вся сеть: {N} из {цель месяца}'));
+      body.append(h('input', { type: 'range', class: 'slider', min: 0, max: 100, value: p, style: { width: '85%' }, oninput: (e) => { p = +e.target.value; render(); } }));
+      body.append(h('div', { class: 'g-note' }, 'Двигай ползунок и смотри, как Фларик оживает. В жизни его двигает общий счёт заданий всех консультантов сети.'));
+    }
+    render();
+    return () => {};
+  };
+
+  Games.secret = function (body) {
+    const EM = [['wow', 'удивление'], ['love', 'радость'], ['wink', 'подмигивание'], ['happy', 'счастье']];
+    let got = 0, played = false, avail = false;
+    function render() {
+      body.innerHTML = '';
+      body.style.justifyContent = 'flex-start';
+      body.append(h('div', { class: 'g-top' }, h('b', {}, 'Секрет Фларика'), h('span', {}, 'Неделя ' + Math.min(4, got + 1) + ' из 4')));
+      const cards = h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: '6px', width: '100%' } });
+      EM.forEach((e, i) => cards.append(h('div', { style: { border: '2px dashed var(--border2)', borderRadius: '14px', padding: '8px 2px', textAlign: 'center', background: i < got ? '#fff' : 'var(--surface-soft)' } },
+        i < got ? h('div', { html: flarik(e[0], 52) }) : h('div', { style: { fontSize: '28px', lineHeight: '52px', color: 'var(--text3)' } }, '?'),
+        h('small', { style: { fontSize: '10px', color: 'var(--muted)' } }, i < got ? e[1] : 'неделя ' + (i + 1)))));
+      body.append(cards);
+      if (played) {
+        body.append(h('div', { class: 'bob', style: { marginTop: '16px' }, html: flarik('happy', 120) }), h('b', { style: { color: 'var(--crimson-dark)' } }, 'Фларик принёс подарок!'));
+      } else {
+        body.append(h('div', { class: 'g-note', style: { marginTop: '12px' } }, 'Раз в неделю Фларик прячется в одной из игр недели. Если ты его заметила и нажала, открывается карточка с эмоцией. Четыре эмоции за месяц, и Фларик оживает с подарком.'));
+      }
+      if (avail) body.append(h('div', { class: 'card now', style: { width: '100%', margin: '10px 0 0' } }, h('h4', {}, 'Профиль → Мои заказы'), h('div', {}, 'Доступно: подарок от Фларика')));
+      body.append(h('div', { class: 'row-btns', style: { marginTop: 'auto' } },
+        got < 4 ? h('button', { class: 'btn pri sm', onclick: () => { got++; if (got === 4) { played = true; setTimeout(() => { avail = true; render(); }, 1600); } render(); } }, 'Неделя ' + (got + 1) + ': нашла Фларика') : null,
+        h('button', { class: 'btn sm', onclick: () => { got = 0; played = false; avail = false; render(); } }, 'Заново')));
+    }
+    render();
+    return () => {};
+  };
+})();
+
+(function () {
+  const { h, U } = Core;
+  Games.flasks2 = (b) => Games.flasks(b, { pair: true });
+  Games.head2 = (b) => Games.head(b, { pair: true });
+
+  const ALL_GAMES = [...CATALOG.filter((g) => !g.layer), ...PAIR.filter((g) => !g.shell)];
+  const ul = (items, tag = 'ul') => h(tag, {}, items.map((x) => h('li', {}, x)));
+  const card = (cls, title, content) => h('div', { class: 'card ' + cls }, h('h4', {}, title), content);
+  const p = (...a) => h('p', {}, ...a);
+
+  function phone(opts) {
+    const screen = h('div', { class: 'phone-screen' });
+    const wrap = h('div', { class: 'phone-wrap' }, h('div', { class: 'phone' }, screen));
+    const body = Core.phoneApp(screen, opts);
+    return { wrap, body };
+  }
+  function mountGame(e, extra = {}) {
+    const ph = phone({ title: e.name, sub: e.family, reward: !(e.layer || e.shell) });
+    let cleanup = null, dead = false;
+    setTimeout(() => { if (!dead) cleanup = Games[e.game](ph.body); }, 0);
+    return { el: ph.wrap, cleanup: () => { dead = true; if (cleanup) cleanup(); } };
+  }
+
+  function gameSlide(e, kind) {
+    return {
+      id: e.id, sec: kind, title: e.name, play: true,
+      render(root) {
+        const m = mountGame(e);
+        root.append(h('div', { class: 'slide' }, h('div', { class: 'split' },
+          h('div', {},
+            h('div', {}, h('span', { class: 'pill' }, e.family), e.tag ? h('span', { class: 'pill a' }, e.tag) : null, h('span', { class: 'pill g' }, 'можно играть справа')),
+            h('h2', { style: { marginTop: '8px' } }, e.icon + ' ' + e.name),
+            card('', 'Цель задания', p(e.goal)),
+            card('', 'Как играем', ul(e.how, 'ol')),
+            card('', 'Награда', p(e.layer ? 'Подарок от Фларика после четвёртой эмоции за месяц. Обычную награду за игры недели он не заменяет.' : e.shell ? 'Награду {value} 🌸 получает каждая из вас, когда вы вместе проходите парную игру.' : 'После победы: «Молодец! +{value} 🌸». Размер награды команда ставит в контент-плане, в презентации он остаётся ячейкой {value}.')),
+            card('now', 'Как сделать сейчас, на механиках приложения', ul(e.now)),
+            card('future', 'Как реализуем в будущем, в виде игры', p(e.future)),
+            card('miss', 'Чего пока нет в приложении', ul(e.miss)),
+            card('', 'Риск', p(e.risk))),
+          m.el)));
+        return m.cleanup;
+      },
+    };
+  }
+
+  function divider(n, title, text, sec) {
+    return { id: 'd' + n, sec, title, render(root) { root.append(h('div', { class: 'slide divider' }, h('div', { class: 'num' }, n), h('h1', {}, title), h('p', { class: 'lead' }, text))); } };
+  }
+
+  /* ---------- начало ---------- */
+  const S = [];
+  S.push({
+    id: 'title', sec: 'Старт', title: 'Flario Game: новые форматы', render(root) {
+      root.append(h('div', { class: 'slide hero' },
+        h('div', { html: Core.flarik('happy', 110), class: 'bob' }),
+        h('h1', {}, 'Новые форматы геймификации для Flario Game'),
+        h('p', { class: 'lead' }, 'Все наши наработки в одном месте. В каждую мини-игру можно сыграть прямо на слайде. Сначала игры для одной, потом игры на двоих, потом идеи к дню рождения и Новому году, потом настройки приложения и в конце как всё это живёт в приложении.'),
+        h('p', {}, h('span', { class: 'pill' }, 'Готовила: Майя Кошман'), h('span', { class: 'pill' }, 'Для: Анна Гучетль, Марина Алейникова')),
+        h('p', { class: 'kbd' }, 'Листай стрелками на клавиатуре или кнопками внизу. Слева содержание.')));
+    },
+  });
+  S.push({
+    id: 'how', sec: 'Старт', title: 'Как смотреть презентацию', render(root) {
+      root.append(h('div', { class: 'slide' }, h('h2', {}, 'Как смотреть презентацию'),
+        h('div', { class: 'grid c2' },
+          card('', 'Что здесь есть', ul(['10 слайдов с одиночными играми, в которые можно играть', '4 слайда с играми на двоих', '5 идей на день рождения приложения и Новый год в картинках', '3 настройки приложения: календарь смен, заметки, Фларик сети', 'в конце: как это живёт в приложении и какие игры можно ставить вместе'])),
+          card('', 'Что не меняем', ul(['Задание «миссия дня» остаётся как есть', 'Ситуативка, видео, инвайт и обучение остаются как есть', 'Мини-игры добавляются рядом, а не вместо них', 'Мини-игры можно включать и менять каждый день'])),
+          card('now', 'Как читать слайд игры', ul(['Слева: цель, правила, что можно сделать сейчас, что строим потом, чего нет в приложении', 'Справа: телефон, на котором можно играть', 'Награда в играх всегда «Молодец! +{value} 🌸». Сумма это ячейка, её задаёт контент-план'])),
+          card('miss', 'Важное про факты', ul(['Блоки «Как сделать сейчас» это наши предложения. Перед разработкой их нужно сверить с Мариной и разработчиками: умеет ли ситуативка и квиз то, что здесь описано','Порядок ухода в игре «Уход за волосами» собран по карточкам Limba Cosmetics', 'Размеры в «Большой банке» это ряд 20 мл → 1000 мл из карточек продуктов', 'Любые цифры наград и сроков в презентации остаются ячейками, мы их не придумываем'])))));
+    },
+  });
+  S.push({
+    id: 'catalog', sec: 'Старт', title: 'Все форматы на одной странице', render(root) {
+      const t = (e) => h('div', { class: 'tile', onclick: () => go(e.id) }, h('b', {}, e.icon + ' ' + e.name), h('span', {}, e.family));
+      root.append(h('div', { class: 'slide' }, h('h2', {}, 'Все форматы на одной странице'), p('Нажми на карточку, чтобы перейти к игре.'),
+        h('h3', {}, 'Одиночные'), h('div', { class: 'grid c3' }, CATALOG.map(t)),
+        h('h3', {}, 'На двоих'), h('div', { class: 'grid c4' }, PAIR.map(t))));
+    },
+  });
+
+  /* ---------- одиночные ---------- */
+  S.push(divider(1, 'Игры для одной', 'Девять мини-игр и один скрытый слой «Секрет Фларика». Во всех можно играть прямо здесь.', 'Одиночные игры'));
+  CATALOG.forEach((e) => S.push(gameSlide(e, 'Одиночные игры')));
+
+  /* ---------- вдвоём ---------- */
+  S.push(divider(2, 'Игры на двоих', 'Парные игры открываются через общее приглашение «Играй с подругой». В презентации партнёра изображает компьютер, а в приложении это живая коллега из той же сети.', 'Игры на двоих'));
+  PAIR.forEach((e) => S.push(gameSlide(e, 'Игры на двоих')));
+
+  /* ---------- ДР / НГ ---------- */
+  const IDEAS = [
+    {
+      id: 'i1', title: 'День рождения: «Задуй свечи»', art: 'candles', tag: 'Идея, ДР приложения (5 октября)',
+      idea: 'На торте свечи. Каждая свеча это шаг пути по приложению: открыть задание дня, выполнить, забрать фларики, зайти в профиль, открыть «Мои заказы». Ты задуваешь свечи в правильном порядке.',
+      how: ['Свечи подписаны вперемешку.', 'Нужно нажимать на них по порядку прохождения задания.', 'Каждая правильная гаснет с дымком, ошибка возвращает к первой.', 'Когда погасли все пять, торт загорается звёздочками и приходит награда.'],
+      now: 'Задание «Нажми по порядку» на механике ситуативки: пять шагов по порядку. Картинку торта можно поставить на фон.',
+      later: 'Когда появится игровой экран «Нажми по порядку», свечи можно сделать анимацией с дымком.',
+    },
+    {
+      id: 'i2', title: 'День рождения: «Найди подарки в комнате»', art: 'gifts', tag: 'Идея, ДР приложения (5 октября)',
+      idea: 'Праздничная комната в беспорядке, в ней спрятаны десять подарочных коробок. Нужно найти все.',
+      how: ['На картинке комната: стол, кровать, ковёр, окно, полка.', 'Десять коробок спрятаны за вещами.', 'Таймер включается после первого нажатия.', 'Нашла все десять, получаешь награду и поздравление от Фларика.'],
+      now: 'Картинка комнаты с метками подарков и вопрос «Сколько подарков видишь?» в ситуативке. Не так весело, зато без разработки.',
+      later: 'Игра «Найди на картинке» с праздничной комнатой, то есть то же самое, что мы уже умеем играть.',
+    },
+    {
+      id: 'i3', title: 'Новый год: «Найди 10 на ёлке»', art: 'tree', tag: 'Идея, Новый год',
+      idea: 'Наряженная ёлка, на которой спрятаны десять предметов из мира Flario: банки, спреи, пипетки.',
+      how: ['Ёлка с игрушками, гирляндой и подарками.', 'Внизу список из десяти предметов, которые нужно найти.', 'Нашла предмет, нажми на него, он загорится.', 'Когда нашла все десять, ёлка вспыхивает огнями.'],
+      now: 'Картинка ёлки с номерами и задание «Какой предмет не найден?». Работает на задании с выбором.',
+      later: 'Игра «Найди на картинке» с новогодней картинкой вместо комнаты.',
+    },
+    {
+      id: 'i4', title: 'Новый год: «Двенадцать ударов»', art: 'clock', tag: 'Идея, Новый год',
+      idea: 'Часы бьют двенадцать раз. На каждый удар ты делаешь один шаг ухода, чтобы проводить уходящий год. В трёх местах путь раздваивается и ты выбираешь, что делать.',
+      how: [
+        '1. Шампунь. Развилка: Multiuse Shampoo или WASH IT (глубокое очищение).',
+        '2. Смыть. 3. Пилинг Refreshing Exfoliation. 4. Смыть. 5. Полотенце.',
+        '6. Маска. Развилка: Hyaluronic mask (10–15 минут, смыть) или Hydro Treatment (15–20 минут с теплом).',
+        '7. Держим время маски. 8. Смываем маску. 9. Полотенце.',
+        '10. Защита перед феном. Развилка: Protein Thermal Protection Spray или Mango Cream.',
+        '11. Фен. 12. Последний штрих года: Recharging Elixir (масло, несмываемый).',
+      ],
+      now: 'Задание «Нажми по порядку» на двенадцать шагов без развилок. Развилки можно показать двумя вариантами одного шага в ситуативке.',
+      later: 'Игра, где часы бьют на каждом шаге. Развилки меняют продукты, но не порядок ухода.',
+    },
+    {
+      id: 'i5', title: 'Новый год: «Гирлянда декабря»', art: 'garland', tag: 'Идея, Новый год',
+      idea: 'Гирлянда на весь декабрь. За каждый день, в который закрыта миссия дня, загорается одна лампочка. Это только счётчик, без штрафов за пропущенные дни.',
+      how: ['Лампочек столько же, сколько дней в декабре.', 'Закрыла задание дня, лампочка зажглась.', 'Пропущенные дни остаются тёмными, но их можно не «догонять».', 'В конце месяца гирлянда сияет, и Фларик показывает, сколько дней ты была с нами.'],
+      now: 'Счётчик закрытых дней можно показать картинкой гирлянды, если приложение хранит закрытые дни (это нужно уточнить).',
+      later: 'Анимация, подсветка при закрытии дня, праздничная музыка и подарок в конце месяца.',
+    },
+  ];
+  S.push(divider(3, 'Идеи на день рождения и Новый год', 'Это идеи с картинками, а не игры. Показываем, как они могут выглядеть, и что из них можно сделать уже сейчас.', 'Идеи ДР и НГ'));
+  IDEAS.forEach((e) => S.push({
+    id: e.id, sec: 'Идеи ДР и НГ', title: e.title,
+    render(root) {
+      const pic = (svg, cap) => h('div', {}, h('div', { class: 'pic', html: svg }), h('div', { class: 'cap' }, cap));
+      root.append(h('div', { class: 'slide' }, h('div', { class: 'split wide' },
+        h('div', {}, h('span', { class: 'pill a' }, e.tag), h('h2', { style: { marginTop: '8px' } }, e.title),
+          card('', 'Идея', p(e.idea)), card('', 'Как играем', ul(e.how)),
+          card('now', 'Что можно сделать сейчас', p(e.now)), card('future', 'Что будет, когда появятся игры', p(e.later))),
+        h('div', { class: 'grid c2', style: { position: 'sticky', top: '12px' } }, pic(Art[e.art](), 'Как выглядит экран'), pic(Art.result(), 'Результат')))));
+    },
+  }));
+  S.push({
+    id: 'ideas-sum', sec: 'Идеи ДР и НГ', title: 'Что из идей когда можно сделать',
+    render(root) {
+      root.append(h('div', { class: 'slide' }, h('h2', {}, 'Что из идей когда можно сделать'),
+        h('table', { class: 't' }, h('tr', {}, ['Идея', 'Сейчас, на механиках приложения', 'Когда появятся игры'].map((x) => h('th', {}, x))),
+          ...IDEAS.map((e) => h('tr', {}, h('td', {}, h('b', {}, e.title.split(': ')[1] || e.title), h('br'), h('span', { class: 'kbd' }, e.tag)), h('td', {}, e.now), h('td', {}, e.later)))),
+        p(''), card('', 'Вывод', p('Все пять идей можно показать уже сейчас картинками и заданиями на выбор, а настоящие игры появятся, когда мы сделаем игровые экраны «Нажми по порядку» и «Найди на картинке». Эти два экрана закрывают четыре идеи из пяти, потому что праздничные игры строятся на тех же правилах.'))));
+    },
+  });
+
+  /* ---------- настройки ---------- */
+  S.push(divider(4, 'Настройки приложения', 'Календарь смен, заметки и Фларик сети. Это не задания, а вещи, которые живут вокруг заданий и делают приложение полезным каждый день.', 'Настройки приложения'));
+  const SET = [
+    { id: 'cal', game: 'calendar', name: 'Календарь смен', title: 'Календарь смен', sub: 'Личный кабинет', pill: 'Личный кабинет',
+      text: [
+        'Консультант сама ставит смены в Зелёном яблоке, Миле или Лэтуаль. Календарь для планирования.',
+        'Нажатие на день переключает: пусто, смена, выходной.',
+        'Розовым цветком отмечены важные события Фларио в месяце: старт продукта месяца, неделя парных игр, итоги месяца. Даты ставит команда в контент-плане.',
+        'Заданий дня в календаре нет. Они живут на главной, календарь только для планирования.',
+      ],
+      now: 'Даты событий Фларио берём из контент-плана, а смены консультант вводит сама. Нужно проверить с разработчиками, как хранить смены по пользователю.',
+      miss: ['Таб «Календарь» в личном кабинете.', 'Хранение смен по пользователю.', 'Показ событий Фларио в календаре.'] },
+    { id: 'notes', game: 'notes', name: 'Заметки', title: 'Заметки', sub: 'Личный кабинет', pill: 'Личный кабинет',
+      text: [
+        'Приватные заметки консультанта. Видит их только она.',
+        'Заметки заменяют вишлист: можно записать и что хочется, и что нужно не забыть.',
+        'Добавить, поправить, удалить. Никакого общего доступа.',
+        'Тоже отдельный таб в личном кабинете.',
+      ],
+      now: 'Вишлист в приложении убираем, вместо него ставим заметки. Для заметок нужно только хранить текст на пользователя.',
+      miss: ['Таб «Заметки» в личном кабинете.', 'Хранение текста заметок на пользователя.'] },
+    { id: 'net', game: 'network', name: 'Фларик сети', title: 'Фларик сети', sub: 'Главная', pill: 'Главная',
+      text: [
+        'Фларик уже раскрыт: это наш маскот, его все видят. Он оживает на главной.',
+        'Считается число выполненных заданий всех сотрудников сети (например, Зелёное яблоко) за период.',
+        'Чем больше заданий выполнила вся сеть, тем бодрее Фларик: сначала спит, потом просыпается, машет, танцует.',
+        'Прогресс общий для сети. Он не про отдельную консультантку и не про отдельный магазин.',
+      ],
+      now: 'Нужно проверить с разработчиками, хранится ли выполнение каждого задания по сотруднику. Если да, остаётся просуммировать по сети и показать картинкой Фларика.',
+      miss: ['Подсчёт заданий по сети.', 'Пять состояний Фларика на главной.', 'Цель на период для сети.'] },
+  ];
+  SET.forEach((e) => S.push({
+    id: e.id, sec: 'Настройки приложения', title: e.title, play: true,
+    render(root) {
+      const ph = phone({ title: e.name, sub: e.sub, reward: false });
+      let cl = null, dead = false; setTimeout(() => { if (!dead) cl = Games[e.game](ph.body); }, 0);
+      root.append(h('div', { class: 'slide' }, h('div', { class: 'split' },
+        h('div', {}, h('span', { class: 'pill' }, e.pill), h('span', { class: 'pill g' }, 'можно потрогать справа'), h('h2', { style: { marginTop: '8px' } }, e.name),
+          card('', 'Как это работает', ul(e.text)), card('now', 'Что есть сейчас', p(e.now)), card('miss', 'Чего пока нет в приложении', ul(e.miss))),
+        ph.wrap)));
+      return () => { dead = true; if (cl) cl(); };
+    },
+  }));
+
+  /* ---------- как реализуем ---------- */
+  S.push(divider(5, 'Как это живёт в приложении', 'Как мини-игры вставляются в приложение, что уже есть, что нужно сделать и какие игры можно ставить в одну неделю.', 'Как реализуем'));
+  S.push({
+    id: 'flow', sec: 'Как реализуем', title: 'Как игра попадает к консультанту',
+    render(root) {
+      const box = (t, d) => h('div', { class: 'card', style: { flex: 1, margin: 0 } }, h('b', { style: { color: 'var(--crimson-dark)' } }, t), h('div', { style: { fontSize: '14px', color: 'var(--muted)', marginTop: '4px' } }, d));
+      const arrow = () => h('div', { style: { alignSelf: 'center', color: 'var(--crimson)', fontSize: '24px' } }, '→');
+      root.append(h('div', { class: 'slide' }, h('h2', {}, 'Как игра попадает к консультанту'),
+        h('p', { class: 'lead' }, 'Мини-игра это ещё один тип задания дня. Ничего вокруг не ломается.'),
+        h('div', { style: { display: 'flex', gap: '10px', flexWrap: 'wrap', margin: '14px 0' } },
+          box('1. Контент-план', 'Команда на день выбирает: миссия дня плюс одна мини-игра.'), arrow(),
+          box('2. Карточка задания', 'Тип «игра», название, какой продукт, слова, шаги, награда {value}.'), arrow(),
+          box('3. Главная', 'Консультант открывает миссию дня и видит мини-игру рядом.'), arrow(),
+          box('4. Игра', 'Играет. Выиграла, получает «Молодец! +{value} 🌸».'), arrow(),
+          box('5. Профиль', 'Фларики на счёте. Секрет Фларика и подарки в «Мои заказы».')),
+        h('div', { class: 'grid c2' },
+          card('now', 'Что остаётся как есть', ul(['Миссия дня: всегда, каждый день', 'Ситуативка, видео, инвайт, обучение', 'Профиль, фларики, «Мои заказы»', 'Структура заданий не меняется'])),
+          card('miss', 'Что добавляем', ul(['Новый тип задания «игра» в карточке задания', 'Экраны игр, по одному на формат', 'Данные для игр: слова, шаги, десять размеров, список предметов', 'Для парных игр: приглашение и игра на двух телефонах', 'Настройки: календарь смен, заметки, Фларик сети', 'Слой «Секрет Фларика»'])))));
+    },
+  });
+  S.push({
+    id: 'readiness', sec: 'Как реализуем', title: 'Что можно сделать когда',
+    render(root) {
+      const row = (g, now, need) => h('tr', {}, h('td', {}, h('b', {}, g.icon + ' ' + g.name), h('br'), h('span', { class: 'kbd' }, g.family)), h('td', {}, g.now[0]), h('td', {}, need));
+      root.append(h('div', { class: 'slide' }, h('h2', {}, 'Что можно сделать когда'),
+        p('Слева направо: название, что можно сделать на механиках приложения уже сейчас, чего не хватает для настоящей игры.'),
+        h('table', { class: 't' }, h('tr', {}, ['Игра', 'Сейчас', 'Чего нет для игры'].map((x) => h('th', {}, x))),
+          ...[...CATALOG, ...PAIR].map((g) => row(g, 0, g.miss.join('; '))))));
+    },
+  });
+
+  /* совместимость */
+  const famOf = (g) => g.family.replace('Вдвоём: тяжёлая', 'Спа').replace('Вдвоём: приглашение', 'Приглашение');
+  function rule(a, b) {
+    if (a === b) return ['self', '·', ''];
+    const pairA = !!PAIR.includes(a), pairB = !!PAIR.includes(b);
+    if (pairA && pairB) return ['no', '✕', 'Парная игра одна в неделю: в выходной слот.'];
+    if (a.family === b.family && ['Разложить', 'Уход'].includes(a.family)) return ['no', '✕', 'Из семьи «' + a.family + '» только одна игра в неделю.'];
+    if (a.family === b.family && ['Аркада', 'Найти'].includes(a.family)) return ['mid', '~', 'Можно, но лучше развести по разным неделям: похожий ритм.'];
+    return ['ok', '✓', 'Хорошо сочетаются.'];
+  }
+  S.push({
+    id: 'compat', sec: 'Как реализуем', title: 'Какие игры можно запускать вместе',
+    render(root) {
+      const info = h('div', { class: 'card', style: { minHeight: '56px' } }, 'Наведи на клетку, чтобы увидеть пояснение.');
+      const tbl = h('table', { class: 't', style: { fontSize: '13px' } });
+      tbl.append(h('tr', {}, h('th', {}, ''), ...ALL_GAMES.map((g) => h('th', { title: g.name, style: { textAlign: 'center' } }, g.icon))));
+      ALL_GAMES.forEach((a) => {
+        tbl.append(h('tr', {}, h('td', {}, h('b', {}, a.icon + ' ' + a.name)), ...ALL_GAMES.map((b) => {
+          const [cls, sym, txt] = rule(a, b);
+          return h('td', { class: cls, onmouseenter: () => { info.textContent = a.name + ' + ' + b.name + ': ' + (txt || 'это одна и та же игра'); } }, sym);
+        })));
+      });
+      root.append(h('div', { class: 'slide' }, h('h2', {}, 'Какие игры можно запускать вместе'),
+        p('«Вместе» значит: в одну неделю контент-плана. Один день, одна мини-игра. Миссия дня идёт каждый день.'),
+        tbl, info,
+        h('div', { class: 'grid c2' },
+          card('now', 'Всегда сочетаются со всем', ul(['Миссия дня, ситуативка, видео, инвайт, обучение', 'Секрет Фларика (прячется в любой игре недели)', 'Календарь смен и заметки', 'Фларик сети'])),
+          card('', 'Правила недели', ul(['Две или три разные игры в неделю', 'Из семейства «Разложить» (колбы, корзинки, пирамидка) одна в неделю', 'Тяжёлая игра («Смена вдвоём») не чаще одной в неделю', 'Парные игры только в выходной слот: суббота или воскресенье', 'Слова и «Нажми по порядку» не ставим в первый день гайда продукта', 'Одну и ту же игру два дня подряд не ставим'])))));
+    },
+  });
+
+  /* планировщик */
+  S.push({
+    id: 'planner', sec: 'Как реализуем', title: 'Попробуй составить неделю', play: true,
+    render(root) {
+      const days = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
+      const plan = Array(7).fill('');
+      let first = 0;
+      const checks = h('div');
+      const sels = days.map((d, i) => {
+        const s = h('select', { onchange: () => { plan[i] = s.value; run(); } },
+          h('option', { value: '' }, 'только миссия'), ALL_GAMES.map((g) => h('option', { value: g.id }, g.name)));
+        return s;
+      });
+      const firstSel = h('select', { onchange: () => { first = +firstSel.value; run(); } }, days.map((d, i) => h('option', { value: i }, d)));
+      const gm = (id) => ALL_GAMES.find((g) => g.id === id);
+      function run() {
+        const used = plan.map((x) => (x ? gm(x) : null));
+        const list = used.filter(Boolean);
+        const out = [];
+        const add = (ok, t) => out.push(h('div', { class: 'chk ' + (ok ? 'ok' : 'bad') }, (ok ? '✓ ' : '✕ ') + t));
+        const distinct = new Set(list.map((g) => g.id)).size;
+        add(distinct >= 2 && distinct <= 3, 'Разных игр в неделе: ' + distinct + '. Нужно две или три.');
+        add(list.filter((g) => g.family === 'Разложить').length <= 1, 'Из семейства «Разложить» не больше одной игры в неделю.');
+        add(list.filter((g) => g.heavy).length <= 1, 'Тяжёлая игра не чаще одной в неделю.');
+        const pairs = used.map((g, i) => (g && PAIR.includes(g) ? i : -1)).filter((i) => i >= 0);
+        add(pairs.every((i) => i >= 5) && pairs.length <= 1, 'Парная игра одна в неделю и только в субботу или воскресенье.');
+        const bad = used[first] && ['words', 'steps'].includes(used[first].id);
+        add(!bad, 'В первый день гайда продукта (' + days[first] + ') нет «Собери слова» и «Нажми по порядку».');
+        add(plan.every((x, i) => !x || x !== plan[i - 1]), 'Одна и та же игра не идёт два дня подряд.');
+        const secret = list.length ? 'Секрет Фларика можно спрятать в любой из этих игр: ' + [...new Set(list.map((g) => g.name))].join(', ') + '.' : 'Выбери хотя бы одну игру.';
+        checks.innerHTML = ''; checks.append(...out, h('p', { class: 'kbd' }, secret));
+      }
+      function example() {
+        const ex = ['', 'steps', '', 'find', '', 'flasks2', ''];
+        ex.forEach((v, i) => { plan[i] = v; sels[i].value = v; });
+        first = 0; firstSel.value = 0; run();
+      }
+      root.append(h('div', { class: 'slide' }, h('h2', {}, 'Попробуй составить неделю'),
+        p('Выбери, какая игра будет в какой день. Миссия дня идёт каждый день, поэтому её здесь выбирать не нужно.'),
+        h('div', { class: 'plan' }, days.map((d, i) => h('div', {}, h('label', {}, d), sels[i]))),
+        h('p', {}, 'Первый день гайда продукта: ', firstSel, ' ', h('button', { class: 'btn sm', onclick: example }, 'Показать хороший пример'), ' ', h('button', { class: 'btn sm', onclick: () => { plan.fill(''); sels.forEach((s) => { s.value = ''; }); run(); } }, 'Очистить')),
+        checks));
+      run();
+    },
+  });
+
+  S.push({
+    id: 'order', sec: 'Как реализуем', title: 'В каком порядке внедрять',
+    render(root) {
+      const step = (n, t, items, cls) => h('div', { class: 'card ' + (cls || ''), style: { display: 'flex', gap: '14px', alignItems: 'flex-start' } },
+        h('div', { style: { fontSize: '30px', fontWeight: 800, color: 'var(--blush)', minWidth: '34px' } }, n), h('div', {}, h('b', { style: { color: 'var(--crimson-dark)' } }, t), items));
+      root.append(h('div', { class: 'slide' }, h('h2', {}, 'В каком порядке внедрять'),
+        p('От самого простого к самому сложному. Каждый следующий шаг можно делать, только если предыдущий уже работает.'),
+        step(1, 'Сейчас: уже есть', ul(['Миссия дня, ситуативка, видео, инвайт, обучение', 'Из новых форматов можно собрать на текущих механиках: «Нажми по порядку», «Найди на картинке» картинкой с метками, квизы на слова']), 'now'),
+        step(2, 'Кнопки, поиск и слова', ul(['«Нажми по порядку», «Найди на картинке», «Собери слова»', 'Самые простые экраны, нужны сразу']), ''),
+        step(3, 'Разложить', ul(['Колбы, корзинки, пирамидка', 'Одна игра такого типа в неделю']), ''),
+        step(4, 'Аркада', ul(['«Большая банка», «Пролети кольцо»', 'Нужна физика и хорошая настройка баланса']), ''),
+        step(5, 'Уход за волосами', ul(['Игра с головой клиентки', 'Шаги берём из карточек продуктов']), ''),
+        step(6, 'Вдвоём', ul(['«Играй с подругой»: приглашение', 'Колбы вдвоём, уход вдвоём, потом «Смена вдвоём»', 'Нужна игра на двух телефонах одновременно']), 'future'),
+        step('+', 'Слои и настройки, когда будет время', ul(['Секрет Фларика, Фларик сети, календарь смен, заметки', 'Они не зависят от игр и можно делать параллельно']), '')));
+    },
+  });
+  S.push({
+    id: 'final', sec: 'Как реализуем', title: 'Итог',
+    render(root) {
+      root.append(h('div', { class: 'slide hero' }, h('div', { class: 'bob', html: Core.flarik('love', 100) }), h('h1', {}, 'Что дальше'),
+        ul(['Выбрать, с каких двух-трёх игр начнём (по порядку внедрения это «Нажми по порядку», «Найди на картинке», «Собери слова»)', 'Определить, какие данные команда будет заполнять: слова, шаги нанесения, список предметов', 'Назначить даты для идей на день рождения и Новый год', 'Решить, нужны ли календарь смен и заметки в первой версии']),
+        h('p', { class: 'lead' }, 'Новые форматы можно добавлять по тем же правилам. Для этого сохранён навык «Новые форматы геймификации».')));
+    },
+  });
+
+  window.SLIDES = S;
+  window.ALL_GAMES = ALL_GAMES;
+
+  /* ---------- движок ---------- */
+  const stage = document.getElementById('stage');
+  const side = document.getElementById('side');
+  let cur = -1, cleanup = null;
+  function go(target) {
+    const i = typeof target === 'number' ? target : S.findIndex((s) => s.id === target);
+    if (i < 0 || i >= S.length) return;
+    if (cleanup) { try { cleanup(); } catch (e) { console.error(e); } cleanup = null; }
+    stage.innerHTML = '';
+    cur = i;
+    const r = S[i].render(stage);
+    cleanup = typeof r === 'function' ? r : null;
+    stage.scrollTop = 0;
+    location.hash = S[i].id;
+    document.querySelectorAll('#side a').forEach((a) => a.classList.toggle('on', a.dataset.id === S[i].id));
+    const on = document.querySelector('#side a.on'); if (on) on.scrollIntoView({ block: 'nearest' });
+    document.querySelector('#bar .grow i').style.width = ((i + 1) / S.length) * 100 + '%';
+    document.querySelector('#bar .cnt').textContent = (i + 1) + ' / ' + S.length;
+    document.querySelector('#bar .prev').disabled = i === 0;
+    document.querySelector('#bar .next').disabled = i === S.length - 1;
+  }
+  window.go = go;
+
+  function buildSide() {
+    side.innerHTML = '';
+    side.append(h('div', { class: 'brand', html: Core.flarik('happy', 28) + ' Flario Game' }));
+    let sec = '';
+    S.forEach((s) => {
+      if (s.sec !== sec) { sec = s.sec; side.append(h('div', { class: 'sec' }, sec)); }
+      if (s.id.startsWith('d') && /^d\d$/.test(s.id)) return;
+      const a = h('a', { 'data-id': s.id, onclick: () => go(s.id) }, s.play ? h('span', { class: 'play' }, '▶') : null, s.title);
+      side.append(a);
+    });
+  }
+  function fit() {
+    const hh = window.innerHeight - 56 - 28;
+    document.documentElement.style.setProperty('--s', Math.min(1, hh / 660).toFixed(3));
+  }
+  window.addEventListener('resize', fit); fit();
+  buildSide();
+  document.querySelector('#bar .prev').onclick = () => go(cur - 1);
+  document.querySelector('#bar .next').onclick = () => go(cur + 1);
+  window.addEventListener('keydown', (e) => {
+    if (['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement.tagName)) return;
+    if (e.key === 'ArrowRight' || e.key === 'PageDown') go(cur + 1);
+    if (e.key === 'ArrowLeft' || e.key === 'PageUp') go(cur - 1);
+  });
+  window.addEventListener('hashchange', () => { const id = location.hash.slice(1); if (id && S[cur] && S[cur].id !== id) go(id); });
+  go(location.hash.slice(1) || 0);
+})();
+</script>
+</body>
+</html>
