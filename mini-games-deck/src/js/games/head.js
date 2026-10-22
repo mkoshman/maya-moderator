@@ -33,16 +33,12 @@
     const info = h('div', { class: 'g-note', style: { minHeight: '34px' } });
     const box = h('div', { class: 'headbox', style: { display: 'flex', justifyContent: 'center' } });
     const toolIcon = h('div', { style: { position: 'absolute', right: '14px', top: '10px', pointerEvents: 'none' } });
-    const svg = s('svg', { viewBox: '0 10 340 255', width: 267, height: 200 });
-    svg.innerHTML = `<rect x="95" y="218" width="150" height="70" rx="34" fill="#af004e"/>
-      <ellipse id="hb" cx="170" cy="125" rx="100" ry="108" fill="#4a2d20"/>
-      <rect x="150" y="196" width="40" height="30" fill="#e8bfa5"/>
-      <ellipse cx="170" cy="150" rx="66" ry="78" fill="#f6d5c0"/>
-      <path id="hf" d="M100 140C100 62 240 62 240 140C215 104 195 96 170 96C145 96 125 104 100 140Z" fill="#4a2d20"/>
-      <path d="M170 72V96" stroke="#f1cdb6" stroke-width="3"/>
-      <path d="M140 152q8-8 16 0M184 152q8-8 16 0" stroke="#1a1118" stroke-width="3" fill="none" stroke-linecap="round"/>
-      <path d="M154 184q16 14 32 0" stroke="#af004e" stroke-width="3.5" fill="none" stroke-linecap="round"/>
-      <circle cx="136" cy="172" r="7" fill="#ffb3d3" opacity=".7"/><circle cx="204" cy="172" r="7" fill="#ffb3d3" opacity=".7"/>
+    const svg = s('svg', { viewBox: '0 0 340 300', width: 300, height: 250 });
+    svg.innerHTML = `<path d="M30 230 Q170 168 310 230 L330 300 L10 300 Z" fill="#f7d5e4"/>
+      <path d="M118 214 Q170 188 222 214 L210 250 L130 250 Z" fill="#e7b89a"/>
+      <path id="hb" d="M78 150 Q62 40 170 24 Q278 40 262 150 Q300 250 170 268 Q40 250 78 150 Z" fill="#4a2d20"/>
+      <path id="hf" d="M108 132 Q170 78 232 132 Q250 210 170 236 Q90 210 108 132 Z" fill="#6a4030" opacity=".45"/>
+      <path d="M170 30 v48" stroke="#e6c2ae" stroke-width="2" opacity=".7"/>
       <g id="fx"></g>`;
     box.append(svg, toolIcon);
     const prog = h('div', { class: 'prog' }, h('i'));
@@ -51,14 +47,8 @@
     body.append(top, line, box, prog, info, menu, btns);
 
     const fxG = svg.querySelector('#fx');
-    function spot(inHair) {
-      for (let i = 0; i < 40; i++) {
-        const x = 170 + U.rand(-96, 96), y = 125 + U.rand(-104, 104);
-        const inHairE = ((x - 170) / 98) ** 2 + ((y - 125) / 106) ** 2 < 1;
-        const inFace = ((x - 170) / 62) ** 2 + ((y - 150) / 74) ** 2 < 1;
-        if (inHairE && !inFace) return [x, y];
-      }
-      return [100, 100];
+    function spot() {
+      return [170 + U.rand(-78, 78), 70 + U.rand(0, 150)];
     }
     function addFx(kind) {
       const [x, y] = spot();
@@ -113,7 +103,7 @@
       if (!mine()) info.textContent = 'Сейчас работает подруга: ' + st.title.toLowerCase() + '. Подожди своего шага.';
       else if (waiting) info.textContent = 'Маска работает. Держим 3 минуты (в презентации ускорено).';
       else if (!tool) info.textContent = hint ? 'Возьми средство: ' + st.title.toLowerCase() + '. ' + st.text : 'Какое средство берём сейчас?';
-      else info.textContent = 'Тапай по голове клиентки! ' + (hint ? st.text : '');
+      else info.textContent = 'Тапай по волосам. ' + (hint ? st.text : '');
     }
 
     function startStep() {

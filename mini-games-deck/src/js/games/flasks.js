@@ -30,38 +30,38 @@
       return Math.min(run, 4 - B.length);
     }
 
-    function flaskEl(f, i) {
-      const el = h('div', { class: 'fl' + (sel === i ? ' sel' : ''), onclick: () => tap(i) });
-      el.append(h('div', { class: 'lip' }));
-      const glass = h('div', { class: 'glass' });
+    function jarEl(f, i) {
+      const el = h('button', { class: 'jv' + (sel === i ? ' sel' : '') + (done(f) ? ' done' : ''), onclick: () => tap(i) });
+      const bottle = h('div', { class: 'bottle' });
+      bottle.append(h('i', { class: 'cap' }));
+      const liquid = h('div', { class: 'liquid' });
+      if (!done(f)) {
+        f.forEach((c) => liquid.append(h('b', { style: { background: colors[c].c } })));
+      }
+      bottle.append(liquid);
       if (done(f)) {
         const p = colors[f[0]];
-        glass.append(h('div', { class: 'seg', style: { background: p.c, height: '100%', opacity: .2 } }));
-        const d = h('div', { class: 'done' });
-        d.append(h('div', { html: img(p.id, 52) }), h('small', {}, p.name));
-        glass.append(d);
-      } else {
-        f.forEach((c) => glass.append(h('div', { class: 'seg', style: { background: colors[c].c } })));
+        bottle.append(h('div', { class: 'became', html: img(p.id, 78) }));
       }
-      el.append(glass);
+      el.append(bottle);
       return el;
     }
 
     function animatePour(a, b, n, cb) {
-      const grid = body.querySelector('.flasks');
-      const A = grid.children[a], B = grid.children[b];
-      const ar = A.getBoundingClientRect(), br = B.getBoundingClientRect(), gr = grid.getBoundingClientRect();
+      const grid = body.querySelector('.jars');
+      const A = grid.children[a];
+      const B = grid.children[b];
+      const ar = A.getBoundingClientRect();
+      const br = B.getBoundingClientRect();
+      const dx = br.left - ar.left;
+      const dy = br.top - ar.top - 36;
       const col = colors[state[a][state[a].length - 1]].c;
-      const st = h('div', { class: 'stream', style: {
-        left: (ar.left + ar.width / 2 - gr.left) + 'px',
-        top: (Math.min(ar.top, br.top) - gr.top + 20) + 'px',
-        height: Math.abs(br.left - ar.left) ? Math.hypot(br.left - ar.left, br.top - ar.top) + 'px' : '40px',
-        background: col,
-        transform: `rotate(${Math.atan2(br.top - ar.top, br.left - ar.left) * 180 / Math.PI - 90}deg)`,
-        transformOrigin: 'top center',
-      } });
-      grid.append(st);
-      later(() => { st.remove(); cb(); }, 380);
+      A.style.zIndex = '30';
+      A.style.transition = 'transform .42s ease';
+      A.style.transform = `translate(${dx}px, ${dy}px) rotate(-62deg)`;
+      const pour = h('i', { class: 'pour', style: { background: col, left: (br.width / 2 - 4) + 'px' } });
+      B.append(pour);
+      later(() => { pour.remove(); A.style.transition = ''; A.style.transform = ''; A.style.zIndex = ''; cb(); }, 520);
     }
 
     function pour(a, b) {
@@ -75,10 +75,10 @@
         render();
         if (doneCount() === 4) later(() => Core.result(body, {
           win: true,
-          text: pair ? 'Банки собрали вместе. Ходов: ' + moves : 'Все банки залиты за ' + moves + ' ходов.',
+          text: pair ? 'Банки собрали вместе. Ходов: ' + moves : 'Четыре банки залиты за ' + moves + ' ходов.',
           onRetry: reset,
-        }), 400);
-        else if (pair) { turn = 'friend'; later(bot, 900); }
+        }), 450);
+        else if (pair) { turn = 'friend'; later(bot, 700); }
       });
       return true;
     }
@@ -102,7 +102,7 @@
       if (!pour(sel, i)) { sel = null; render(); }
     }
     function undo() {
-      if (!hist.length || busy) return;
+      if (!hist.length || busy || turn !== 'me') return;
       state = JSON.parse(hist.pop()); moves = Math.max(0, moves - 1); sel = null; render();
     }
     function render() {
@@ -110,10 +110,10 @@
       body.append(h('div', { class: 'g-top' },
         h('span', {}, 'Собрано: ', h('b', {}, doneCount() + ' / 4')),
         pair ? h('span', { class: 'role ' + (turn === 'me' ? 'me' : '') }, turn === 'me' ? 'Твой ход' : 'Ход подруги') : h('span', {}, 'Ходов: ', h('b', {}, moves))));
-      body.append(h('div', { class: 'g-note' }, 'Сначала колбы прозрачные. Перелей жидкость цвета банки. Когда колба полная одного цвета, она становится нашей банкой.'));
-      const grid = h('div', { class: 'flasks' });
-      state.forEach((f, i) => grid.append(flaskEl(f, i)));
+      const grid = h('div', { class: 'jars' });
+      state.forEach((f, i) => grid.append(jarEl(f, i)));
       body.append(grid);
+      body.append(h('div', { class: 'g-note' }, 'Пустая банка прозрачная. Подними её и перелей в другую. Когда банка полная одного цвета, она становится продуктом.'));
       body.append(h('div', { class: 'row-btns' }, h('button', { class: 'btn sm', onclick: undo }, '↶ Назад'), h('button', { class: 'btn sm', onclick: reset }, 'Заново')));
     }
     reset();

@@ -2,7 +2,8 @@
   const { h, U, PRODUCTS } = Core;
   Games.merge = function (body) {
     const W = 340, H = 500, LINE = 80, G = 900;
-    const TIERS = PRODUCTS.map((p, i) => ({ ...p, r: 14 + i * 4.6, i }));
+    const ROW = [PRODUCTS[0], PRODUCTS[2], PRODUCTS[6], PRODUCTS[8], PRODUCTS[9]];
+    const TIERS = ROW.map((p, i) => ({ ...p, r: [42, 58, 76, 96, 118][i], i }));
     let balls, dropX, cd, next, over, raf, last, high, dead = false, overT;
     const sprites = TIERS.map((t) => {
       const c = document.createElement('canvas');
@@ -22,9 +23,9 @@
     const canvas = h('canvas', { width: W, height: H, style: { width: W + 'px', height: H + 'px', borderRadius: '16px', border: '1px solid var(--border)', background: '#fff', touchAction: 'none', flex: 'none' } });
     const ctx = canvas.getContext('2d');
     const top = h('div', { class: 'g-top' });
-    body.append(top, canvas, h('div', { class: 'g-note' }, 'Банки Limba и Tashe от маленькой к большой. Веди и отпусти. Две одинаковые склеиваются в следующий размер.'));
+    body.append(top, canvas, h('div', { class: 'g-note' }, 'Пять размеров, банки крупные. Веди и отпусти. Две одинаковые склеиваются в следующий размер.'));
     function reset() {
-      balls = []; dropX = W / 2; cd = 0; over = false; high = 0; overT = 0; next = U.ri(0, 2); last = performance.now();
+      balls = []; dropX = W / 2; cd = 0; over = false; high = 0; overT = 0; next = U.ri(0, 1); last = performance.now();
       const ov = body.querySelector('.overlay'); if (ov) ov.remove(); showTop();
     }
     function showTop() {
@@ -35,7 +36,7 @@
       if (over || cd > 0) return;
       const t = TIERS[next];
       balls.push({ x: U.clamp(dropX, t.r + 4, W - t.r - 4), y: 40, vx: 0, vy: 40, t: next, r: t.r, age: 0, dead: false });
-      next = U.ri(0, 3); cd = .5; showTop();
+      next = U.ri(0, 1); cd = .55; showTop();
     }
     const pos = (e) => { const rc = canvas.getBoundingClientRect(); dropX = (e.clientX - rc.left) * (W / rc.width); };
     canvas.addEventListener('pointerdown', (e) => { pos(e); canvas.setPointerCapture(e.pointerId); });
@@ -56,7 +57,7 @@
           const dx = b.x - a.x, dy = b.y - a.y, min = a.r + b.r, d2 = dx * dx + dy * dy;
           if (d2 >= min * min || !d2) continue;
           const d = Math.sqrt(d2);
-          if (a.t === b.t && a.t < 9) {
+          if (a.t === b.t && a.t < TIERS.length - 1) {
             a.dead = b.dead = true;
             const nt = a.t + 1;
             add.push({ x: (a.x + b.x) / 2, y: (a.y + b.y) / 2, vx: 0, vy: -30, t: nt, r: TIERS[nt].r, age: 2, dead: false });
@@ -70,7 +71,7 @@
         balls = balls.filter((b) => !b.dead).concat(add);
         add.forEach((n) => { if (n.t > high) high = n.t; });
         showTop();
-        if (high >= 9 && !over) { over = true; setTimeout(() => !dead && Core.result(body, { win: true, text: 'Собрана самая большая банка из ряда Limba/Tashe.', onRetry: reset }), 500); }
+        if (high >= TIERS.length - 1 && !over) { over = true; setTimeout(() => !dead && Core.result(body, { win: true, text: 'Собрана самая большая банка, до 1000 мл.', onRetry: reset }), 500); }
       }
     }
     function draw() {

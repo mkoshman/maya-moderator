@@ -64,31 +64,18 @@
   }
   function flarik3d(emo, size = 90) {
     const faces = {
-      happy: '<path d="M28 58q22 18 44 0" stroke="#7e0038" stroke-width="4" fill="none" stroke-linecap="round"/><circle cx="38" cy="42" r="5"/><circle cx="62" cy="42" r="5"/>',
-      wow: '<ellipse cx="50" cy="62" rx="8" ry="10" fill="#7e0038"/><circle cx="36" cy="40" r="7"/><circle cx="64" cy="40" r="7"/>',
-      love: '<path d="M38 48l-7-7a5 5 0 017-7l2 2 2-2a5 5 0 017 7zM62 48l-7-7a5 5 0 017-7l2 2 2-2a5 5 0 017 7z" fill="#af004e"/>',
-      wink: '<circle cx="38" cy="42" r="5"/><path d="M54 42q8-8 16 0" stroke="#1a1118" stroke-width="4" fill="none" stroke-linecap="round"/><path d="M32 60q18 12 36 0" stroke="#7e0038" stroke-width="4" fill="none"/>',
+      happy: '<path d="M30 62q20 16 40 0" stroke="#7e0038" stroke-width="5" fill="none" stroke-linecap="round"/><circle cx="36" cy="44" r="5"/><circle cx="64" cy="44" r="5"/>',
+      wow: '<ellipse cx="50" cy="64" rx="7" ry="9" fill="#7e0038"/><circle cx="36" cy="42" r="6"/><circle cx="64" cy="42" r="6"/>',
+      love: '<path d="M36 50l-6-6a4 4 0 016-6l2 2 2-2a4 4 0 016 6zM64 50l-6-6a4 4 0 016-6l2 2 2-2a4 4 0 016 6z" fill="#af004e"/>',
+      wink: '<circle cx="36" cy="44" r="5"/><path d="M54 44q8-8 16 0" stroke="#7e0038" stroke-width="4" fill="none" stroke-linecap="round"/><path d="M32 62q18 12 36 0" stroke="#7e0038" stroke-width="5" fill="none"/>',
+      sleepy: '<path d="M32 46h12M56 46h12" stroke="#7e0038" stroke-width="4" stroke-linecap="round"/><path d="M40 64h20" stroke="#7e0038" stroke-width="4" stroke-linecap="round"/>',
     };
-    return `<div class="flarik-face" style="width:${size}px;height:${size}px">${volFlarik(size)}<svg class="emo" viewBox="0 0 100 100" width="${size * .55}" height="${size * .55}">${faces[emo] || faces.happy}</svg></div>`;
+    const face = emo ? `<svg class="emo" viewBox="0 0 100 100" width="${Math.round(size * .32)}" height="${Math.round(size * .32)}">${faces[emo] || faces.happy}</svg>` : '';
+    return `<span class="flarik-face" style="width:${size}px;height:${size}px">${volFlarik(size)}${face}</span>`;
   }
 
-  function flarik(emotion = 'happy', size = 64, extra = '') {
-    const petals = [0, 72, 144, 216, 288]
-      .map((a) => `<ellipse cx="50" cy="22" rx="17" ry="20" fill="#ffd9ea" stroke="#d4005f" stroke-width="2.5" transform="rotate(${a} 50 52)"/>`)
-      .join('');
-    const eyes = {
-      happy: '<path d="M36 50q5-8 10 0M54 50q5-8 10 0" stroke="#1a1118" stroke-width="3" fill="none" stroke-linecap="round"/>',
-      wow: '<circle cx="41" cy="50" r="4.5" fill="#1a1118"/><circle cx="59" cy="50" r="4.5" fill="#1a1118"/>',
-      sleepy: '<path d="M36 51h10M54 51h10" stroke="#1a1118" stroke-width="3" stroke-linecap="round"/><text x="68" y="38" font-size="14" fill="#7a5f70" font-weight="700">z</text>',
-      love: '<path d="M41 55l-6-6a3.5 3.5 0 015-5l1 1 1-1a3.5 3.5 0 015 5z M59 55l-6-6a3.5 3.5 0 015-5l1 1 1-1a3.5 3.5 0 015 5z" fill="#d4005f"/>',
-      wink: '<circle cx="41" cy="50" r="4" fill="#1a1118"/><path d="M54 50q5-7 10 0" stroke="#1a1118" stroke-width="3" fill="none" stroke-linecap="round"/>',
-    }[emotion] || '';
-    const mouth = emotion === 'wow'
-      ? '<ellipse cx="50" cy="66" rx="5" ry="6" fill="#af004e"/>'
-      : emotion === 'sleepy'
-      ? '<path d="M44 66h12" stroke="#af004e" stroke-width="3" stroke-linecap="round"/>'
-      : '<path d="M40 62q10 12 20 0" stroke="#af004e" stroke-width="3" fill="#fff" stroke-linecap="round"/>';
-    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="${size}" height="${size}" ${extra}>${petals}<circle cx="50" cy="52" r="26" fill="#fff0f7" stroke="#d4005f" stroke-width="2.5"/>${eyes}${mouth}<circle cx="34" cy="62" r="4" fill="#ffb3d3" opacity=".8"/><circle cx="66" cy="62" r="4" fill="#ffb3d3" opacity=".8"/></svg>`;
+  function flarik(emotion = 'happy', size = 64) {
+    return flarik3d(emotion, size);
   }
 
   function productSVG(kind, color, size = 64) {
@@ -142,7 +129,7 @@
       h('div', { class: 'app-bar' },
         h('span', { class: 'app-back' }, '‹'),
         h('div', { class: 'app-title' }, h('b', {}, opts.title), opts.sub ? h('small', {}, opts.sub) : null),
-        opts.reward === false ? null : h('span', { class: 'chip' }, '+{value} 🌸')),
+        opts.reward === false ? null : h('span', { class: 'chip', html: '+{value} ' + volFlarik(16) })),
       body);
     return body;
   }
@@ -151,7 +138,7 @@
     const old = body.querySelector('.overlay');
     if (old) old.remove();
     const ov = h('div', { class: 'overlay ' + (o.win ? 'win' : 'lose') });
-    ov.append(h('div', { class: 'bob', html: flarik(o.win ? 'happy' : 'sleepy', 96) }));
+    ov.append(h('div', { class: 'bob', html: flarik3d(o.win ? 'happy' : 'sleepy', 120) }));
     ov.append(h('h3', {}, o.win ? (o.title || 'Молодец! +{value} 🌸') : (o.title || 'Не получилось')));
     if (o.text) ov.append(h('p', {}, o.text));
     if (o.onRetry) ov.append(h('button', { class: 'btn pri', onclick: () => { ov.remove(); o.onRetry(); } }, o.retryLabel || 'Сыграть ещё раз'));

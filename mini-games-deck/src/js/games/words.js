@@ -6,9 +6,9 @@
     let dead = false;
 
     const ROUNDS = [
-      { w: 'СЕРИН', hint: 'В составе Multiuse есть эта аминокислота. 5 букв, начинается на С' },
-      { w: 'ПРОЛИН', hint: 'Та же линейка шампуня, 6 букв, часто путают с протеином' },
-      { w: 'ЛИЗИН', hint: 'Короткая аминокислота из того же списка, 5 букв' },
+      { w: 'СЕРИН', hint: 'Аминокислота Multiuse, 5 букв, на С' },
+      { w: 'ПРОЛИН', hint: '6 букв из того же состава' },
+      { w: 'ЛИЗИН', hint: 'Короткая, 5 букв' },
     ];
     const FW = ['ШАМПУНЬ', 'СЕРИН', 'ЛИЗИН', 'ПРОЛИН', 'АЛАНИН', 'ГЛИЦИН'];
 
@@ -19,11 +19,12 @@
       const info = h('div', { class: 'g-top' });
       const slots = h('div', { class: 'slots' });
       const wh = h('div', { class: 'wheel' });
-      const line = s('svg', { width: 250, height: 250 });
+      const S = 318, R = 112;
+      const line = s('svg', { width: S, height: S });
       const poly = s('polyline', { points: '', fill: 'none', stroke: '#d4005f', 'stroke-width': 6, 'stroke-linecap': 'round', 'stroke-linejoin': 'round', opacity: .5 });
       line.append(poly);
+      wh.style.width = S + 'px'; wh.style.height = S + 'px';
       body.append(info, slots, wh);
-      body.append(h('div', { class: 'g-note' }, 'Проведи пальцем по буквам по кругу, чтобы собрать слово. Не отпускай, пока не соберёшь до конца.'));
 
       function setup() {
         const r = ROUNDS[round];
@@ -38,7 +39,7 @@
         do { sh = U.shuffle(letters); } while (sh.join('') === r.w);
         nodes = sh.map((ch, i) => {
           const a = (i / sh.length) * Math.PI * 2 - Math.PI / 2;
-          const n = h('div', { class: 'lt', style: { left: 125 + Math.cos(a) * 88 + 'px', top: 125 + Math.sin(a) * 88 + 'px' } }, ch);
+          const n = h('div', { class: 'lt', style: { left: S / 2 + Math.cos(a) * R + 'px', top: S / 2 + Math.sin(a) * R + 'px' } }, ch);
           n.dataset.i = i; n.dataset.ch = ch;
           wh.append(n);
           return n;
@@ -138,7 +139,7 @@
       }
       const wl = h('div', { class: 'wl' });
       FW.forEach((w) => { const e = h('span', {}, w); e.dataset.w = w; wl.append(e); });
-      body.append(fw, wl, h('div', { class: 'g-note' }, 'Веди пальцем по прямой линии: вправо, вниз или по диагонали. Слова могут идти и задом наперёд.'));
+      body.append(fw, wl);
 
       let start = null, cur = [];
       const at = (x, y) => cells[y * N + x];

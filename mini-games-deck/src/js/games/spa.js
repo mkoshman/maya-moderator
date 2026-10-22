@@ -3,9 +3,9 @@
 
   const ST = {
     door: { x: 175, y: 22, cls: 'door', t: 'Вход' },
-    shampoo: { x: 298, y: 170, cls: 'shelf', t: 'Шампунь' },
-    thermal: { x: 298, y: 220, cls: 'shelf', t: 'Термозащита' },
-    glance: { x: 298, y: 270, cls: 'shelf', t: 'Блеск-спрей' },
+    shampoo: { x: 298, y: 170, cls: 'shelf', t: 'Шампунь', img: 'lmb05' },
+    thermal: { x: 298, y: 220, cls: 'shelf', t: 'Термозащита', img: 'lmb42' },
+    glance: { x: 298, y: 270, cls: 'shelf', t: 'Блеск', img: 'lmb87' },
     sink: { x: 55, y: 345, cls: 'sink', t: 'Мойка' },
     seat1: { x: 150, y: 345, cls: 'seat', t: 'Кресло 1' },
     seat2: { x: 245, y: 345, cls: 'seat', t: 'Кресло 2' },
@@ -25,7 +25,7 @@
   const label = (s) => s.k === 'wash' ? 'Помыть голову' : s.k === 'consult' ? 'Консультация' : 'Укладка: ' + BOTTLE[s.item].toLowerCase();
   const fits = (step, st) => (step.k === 'wash' && st === 'sink') || (step.k === 'style' && (st === 'seat1' || st === 'seat2')) || (step.k === 'consult' && st === 'desk');
   const needName = (step) => step.k === 'wash' ? 'мойку' : step.k === 'consult' ? 'стол консультации' : 'кресло';
-  const faceSVG = (c, hat) => `<svg viewBox="0 0 30 30" width="30" height="30"><circle cx="15" cy="16" r="12" fill="${c}"/><circle cx="11" cy="15" r="1.6" fill="#1a1118"/><circle cx="19" cy="15" r="1.6" fill="#1a1118"/><path d="M10 20q5 4 10 0" stroke="#1a1118" stroke-width="1.5" fill="none"/>${hat ? '<rect x="7" y="1" width="16" height="7" rx="3" fill="#fff" stroke="#999"/>' : ''}</svg>`;
+  const personSVG = (hair, master) => `<svg viewBox="0 0 44 62" width="40" height="56"><path d="M10 60 V36 Q10 28 22 28 Q34 28 34 36 V60" fill="${master ? '#fff' : '#f3d2bf'}"/><path d="M8 34 Q22 18 36 34 Q34 48 22 50 Q10 48 8 34" fill="${hair}"/>${master ? '<rect x="12" y="34" width="20" height="16" rx="3" fill="#af004e"/>' : '<path d="M16 16 Q22 6 28 16" fill="none" stroke="#fff" stroke-width="2"/>'}</svg>`;
 
   Games.spa = function (body) {
     const GOAL = 6;
@@ -33,22 +33,34 @@
 
     const top = h('div', { class: 'g-top' });
     const field = h('div', { class: 'spa' });
-    field.style.background = 'linear-gradient(#f7e6ee,#fff5f9)';
+    field.style.background = '#f3e6dc';
+    const room = h('div', { class: 'salon-bg', html: `<svg viewBox="0 0 344 470" width="344" height="470">
+      <rect width="344" height="300" fill="#f7e7ee"/>
+      <rect y="300" width="344" height="170" fill="#e4cbb6"/>
+      <rect x="16" y="28" width="70" height="120" rx="6" fill="#111"/>
+      <rect x="150" y="24" width="64" height="90" rx="6" fill="#d5dde4" stroke="#bfc8d0"/>
+      <rect x="250" y="24" width="64" height="90" rx="6" fill="#d5dde4" stroke="#bfc8d0"/>
+      <ellipse cx="55" cy="250" rx="36" ry="14" fill="#d5e6f2" stroke="#7aa4c4"/>
+      <rect x="130" y="230" width="48" height="36" rx="10" fill="#d7e6f4"/>
+      <rect x="230" y="230" width="48" height="36" rx="10" fill="#d7e6f4"/>
+      <rect x="250" y="150" width="78" height="70" rx="8" fill="#fff" stroke="#e7c3d4"/>
+    </svg>` });
+    field.append(room);
     const toast = h('div', { class: 'g-note', style: { minHeight: '30px' } });
     body.append(top, field, toast);
     Object.entries(ST).forEach(([id, s]) => {
-      const e = h('div', { class: 'st ' + s.cls, style: { left: s.x + 'px', top: s.y + 'px' }, onclick: () => command({ kind: id === 'door' ? null : (s.cls === 'shelf' ? 'shelf' : 'station'), id }) }, s.t);
+      const e = h('div', { class: 'st ' + s.cls, style: { left: s.x + 'px', top: s.y + 'px' }, onclick: () => command({ kind: id === 'door' ? null : (s.cls === 'shelf' ? 'shelf' : 'station'), id }) }, s.cls === 'shelf' ? h('div', { html: Core.img(s.img, 28) }) : null, h('span', {}, s.t));
       s.el = e; field.append(e);
     });
 
-    function say(m) { toast.textContent = m; clearTimeout(toastT); toastT = setTimeout(() => { toast.textContent = 'Нажми на повара, потом на то, куда ему идти.'; }, 3500); }
+    function say(m) { toast.textContent = m; clearTimeout(toastT); toastT = setTimeout(() => { toast.textContent = 'Нажми на мастера, потом на мойку, кресло или полку.'; }, 3500); }
     function showTop() {
       top.innerHTML = '';
-      top.append(h('span', {}, 'Салон Каролина · ', h('b', {}, served + ' / ' + GOAL)), h('span', {}, 'Ушли: ', h('b', {}, lost + ' / 3')));
+      top.append(h('span', {}, 'Салон · ', h('b', {}, served + ' / ' + GOAL)), h('span', {}, 'Ушли: ', h('b', {}, lost + ' / 3')));
     }
 
     function mkChef(id, col, x, y) {
-      const el = h('div', { class: 'ppl chef', html: faceSVG(col, true) });
+      const el = h('div', { class: 'ppl chef', html: personSVG(col, true) });
       el.onclick = (e) => { e.stopPropagation(); sel = c; refreshSel(); };
       const c = { id, x, y, tx: x, ty: y, task: null, hold: null, work: null, el, col };
       field.append(el);
@@ -58,19 +70,19 @@
 
     function reset() {
       field.querySelectorAll('.ppl').forEach((e) => e.remove());
-      chefs = [mkChef('A', '#f7b9d4', 90, 250), mkChef('B', '#b9d6f7', 220, 250)];
+      chefs = [mkChef('A', '#4a2d20', 90, 250), mkChef('B', '#c47b93', 220, 250)];
       sel = chefs[0]; refreshSel();
       clients = []; occ = {}; served = 0; lost = 0; spawnT = 6; over = false; last = performance.now(); uid = 0;
       const ov = body.querySelector('.overlay'); if (ov) ov.remove();
       spawn(); spawn();
-      showTop(); say('Нажми на повара, потом на то, куда ему идти.');
+      showTop(); say('Нажми на мастера, потом на то, куда ему идти.');
     }
 
     function spawn() {
       const free = QUEUE.findIndex((_, i) => !clients.some((c) => c.where === 'queue' && c.spot === i));
       if (free < 0) return;
       const steps = U.pick(ORDERS).map((x) => ({ ...x }));
-      const el = h('div', { class: 'ppl', html: faceSVG(U.pick(['#f6d5c0', '#e8bfa5', '#d9a98a']), false) });
+      const el = h('div', { class: 'ppl', html: personSVG(U.pick(['#4a2d20', '#6a4030', '#2a211c']), false) });
       const bub = h('div', { class: 'bub' }); const pat = h('div', { class: 'pat' }, h('i'));
       el.append(bub, pat);
       const c = { id: uid++, steps, si: 0, where: 'queue', spot: free, x: QUEUE[free].x, y: QUEUE[free].y, patience: 75, el, bub, pat };
@@ -86,7 +98,7 @@
     function command(t) {
       if (over || !t.kind) return;
       const c = sel;
-      if (c.work) { say('Повар занят, подожди секунду.'); return; }
+      if (c.work) { say('Мастер занят, подожди секунду.'); return; }
       c.task = t;
       if (t.kind === 'client') { c.tx = t.c.x; c.ty = t.c.y; }
       else { c.tx = ST[t.id].x; c.ty = ST[t.id].y; }

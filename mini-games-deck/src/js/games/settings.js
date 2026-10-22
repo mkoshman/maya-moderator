@@ -23,10 +23,10 @@
     function render() {
       body.innerHTML = '';
       body.style.justifyContent = 'flex-start';
-      body.append(h('div', { class: 'g-top' }, h('b', {}, 'Календарь'), h('span', {}, 'Октябрь')));
+      body.append(h('div', { class: 'month-head' }, h('b', {}, 'Октябрь 2026'), h('span', {}, '1-е — четверг')));
       const cal = h('div', { class: 'cal' });
       ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'].forEach((d) => cal.append(h('b', {}, d)));
-      for (let i = 0; i < 2; i++) cal.append(h('span'));
+      for (let i = 0; i < 3; i++) cal.append(h('span'));
       for (let d = 1; d <= 31; d++) {
         const has = all(d).length;
         cal.append(h('button', { class: d === open ? 'sh' : '', onclick: () => { open = d; form = false; render(); } },
@@ -88,22 +88,34 @@
   };
 
   Games.network = function (body) {
-    let p = 42;
+    let p = 18;
+    function stage(v) {
+      if (v < 25) return 'бутон';
+      if (v < 55) return 'раскрывается';
+      if (v < 80) return 'почти расцвёл';
+      return 'расцвёл';
+    }
     function render() {
       body.innerHTML = '';
-      body.style.padding = '0'; body.style.justifyContent = 'flex-start';
-      const wrap = h('div', { style: { position: 'relative', width: '100%', flex: 1, overflow: 'hidden' } });
-      wrap.append(h('img', { src: ASSETS.home_ui || ASSETS.home, style: { width: '100%', display: 'block' } }));
-      const overlay = h('div', { style: { position: 'absolute', left: '10px', right: '10px', top: '58px', background: 'rgba(255,255,255,.94)', borderRadius: '16px', border: '1px solid var(--border)', padding: '8px 10px', display: 'flex', gap: '10px', alignItems: 'center' } });
-      overlay.append(h('div', { html: flarik3d(p > 70 ? 'happy' : p > 40 ? 'wink' : 'sleepy', 54) }));
-      overlay.append(h('div', { style: { flex: 1 } },
-        h('b', { style: { fontSize: '13px' } }, 'Фларик сети'),
-        h('div', { class: 'g-note', style: { textAlign: 'left', padding: 0 } }, 'Счётчик заданий всей сети, не твой личный.'),
-        h('div', { class: 'prog', style: { marginTop: '4px' } }, h('i', { style: { width: p + '%' } }))));
-      wrap.append(overlay);
+      body.style.padding = '0';
+      body.style.justifyContent = 'flex-start';
+      const wrap = h('div', { class: 'home-layer bloom-home' });
+      wrap.append(h('img', { src: ASSETS.home_ui || ASSETS.home, alt: '' }));
+      const scale = 0.34 + (p / 100) * 0.9;
+      const hero = h('div', { class: 'bloom' });
+      hero.append(h('div', { class: 'bloom-fl', style: { transform: `scale(${scale})` }, html: Core.flarik3d(p > 80 ? 'happy' : p > 45 ? 'wink' : 'sleepy', 180) }));
+      if (p > 60) {
+        hero.append(h('i', { class: 'spark', style: { left: '18%', top: '22%' } }));
+        hero.append(h('i', { class: 'spark', style: { right: '16%', top: '30%' } }));
+        hero.append(h('i', { class: 'spark', style: { left: '28%', bottom: '18%' } }));
+      }
+      const cap = h('div', { class: 'bloom-cap' },
+        h('b', {}, 'Фларик сети'),
+        h('span', {}, stage(p) + ' · ' + Math.round(p * 128) + ' заданий сети'));
+      hero.append(cap);
+      wrap.append(hero);
       body.append(wrap);
       body.append(h('input', { type: 'range', class: 'slider', min: 0, max: 100, value: p, oninput: (e) => { p = +e.target.value; render(); } }));
-      body.append(h('div', { class: 'g-note' }, 'На главной, над миссией. Движется от суммы выполненных заданий всех консультантов сети.'));
     }
     render();
     return () => {};
@@ -116,16 +128,14 @@
       body.innerHTML = '';
       body.style.justifyContent = 'flex-start';
       if (card != null && !gift) {
-        body.append(h('div', { style: { margin: '20px auto', textAlign: 'center' }, html: flarik3d(EM[card][0], 140) }));
-        body.append(h('b', {}, 'Карточка: ' + EM[card][1]));
-        body.append(h('p', { class: 'g-note' }, 'Она уйдёт в профиль, в ряд из четырёх карточек.'));
+        body.append(h('div', { class: 'emo-card' }, h('div', { html: flarik3d(EM[card][0], 210) }), h('b', {}, EM[card][1])));
+        body.append(h('p', { class: 'g-note' }, 'Карточка садится в профиль, в ряд из четырёх.'));
         body.append(h('button', { class: 'btn pri', onclick: () => { got = card + 1; card = null; render(); } }, 'Положить в профиль'));
         return;
       }
       if (gift && !asked) {
-        body.append(h('div', { html: flarik3d('happy', 130), style: { margin: '16px auto' } }));
-        body.append(h('b', {}, 'Фларик принёс тебе подарок'));
-        body.append(h('p', { class: 'g-note' }, 'Кнопка отправляет запрос в админку. Модератор создаёт подарок, он появляется в «Мои заказы» и ждёт оформления.'));
+        body.append(h('div', { class: 'emo-card' }, h('div', { html: flarik3d('happy', 210) }), h('b', {}, 'Фларик принёс подарок')));
+        body.append(h('p', { class: 'g-note' }, 'Кнопка отправляет запрос в админку. Подарок появится в «Мои заказы».'));
         body.append(h('button', { class: 'btn pri', onclick: () => { asked = true; render(); } }, 'Получить подарок'));
         return;
       }
@@ -134,12 +144,12 @@
       }
       body.append(h('div', { class: 'g-top' }, h('b', {}, 'Профиль'), h('span', {}, 'Майя')));
       body.append(h('div', { class: 'g-note' }, 'Четыре карточки под данными. Фларика в игре нажимаешь на нём самом, отдельной кнопки «нашла» нет.'));
-      const row = h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: '6px', width: '100%' } });
-      EM.forEach((e, i) => row.append(h('div', { style: { border: '1.5px dashed var(--border2)', borderRadius: '12px', padding: '6px 2px', textAlign: 'center', background: i < got ? '#fff' : '#f5f0f3' } },
-        i < got ? h('div', { html: flarik3d(e[0], 48) }) : h('div', { style: { height: '48px', color: 'var(--text3)' } }, '?'),
-        h('small', { style: { fontSize: '10px' } }, e[1]))));
+      const row = h('div', { class: 'emo-row' });
+      EM.forEach((e, i) => row.append(h('div', { class: 'emo-slot' + (i < got ? ' got' : '') },
+        i < got ? h('div', { html: flarik3d(e[0], 72) }) : h('div', { class: 'empty' }, ''),
+        h('small', {}, e[1]))));
       body.append(row);
-      if (got < 4 && !gift) body.append(h('div', { style: { marginTop: '12px', textAlign: 'center', cursor: 'pointer' }, onclick: () => { card = got; render(); }, html: flarik3d(EM[got][0], 80) + '<div class="g-note">Фларик выглянул из игры — нажми на него</div>' }));
+      if (got < 4 && !gift) body.append(h('button', { class: 'peek', onclick: () => { card = got; render(); } }, h('div', { html: flarik3d(EM[got][0], 96) }), h('span', {}, 'Фларик выглянул. Нажми на него')));
       if (got === 4 && !gift) { gift = true; setTimeout(render, 400); }
       const nav = h('div', { class: 'btm' },
         h('span', {}, 'Главная'), h('span', {}, 'Гайды'), h('span', {}, 'Призы'), h('span', { class: 'on' }, 'Профиль'));
