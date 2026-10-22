@@ -12,10 +12,10 @@
     { tool: 'dryer', taps: 10, who: 'A', title: 'Уложить феном', text: 'Сушим и укладываем' },
   ];
   const TOOLS = [
-    ['shampoo', 'Шампунь', () => productSVG('bottle', '#5aa02c', 32)],
-    ['peel', 'Пилинг', () => productSVG('jar', '#8b5fbf', 32)],
-    ['mask', 'Маска', () => productSVG('jar', '#d4005f', 32)],
-    ['spray', 'Термозащита', () => productSVG('spray', '#3b82c4', 32)],
+    ['shampoo', 'Шампунь', () => Core.img('lmb05', 32)],
+    ['peel', 'Пилинг', () => Core.img('lmb57', 32)],
+    ['mask', 'Маска', () => Core.img('lmb56', 32)],
+    ['spray', 'Термозащита', () => Core.img('lmb42', 32)],
     ['shower', 'Душ', () => '<svg viewBox="0 0 40 40" width="32" height="32"><path d="M8 12a12 8 0 0124 0z" fill="#6aa2d2"/><path d="M11 18v6M17 18v10M23 18v6M29 18v10" stroke="#6aa2d2" stroke-width="2.5" stroke-linecap="round"/></svg>'],
     ['towel', 'Полотенце', () => itemSVG('towel', 32)],
     ['dryer', 'Фен', () => itemSVG('dryer', 32)],

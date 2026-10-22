@@ -33,6 +33,7 @@
 
     const top = h('div', { class: 'g-top' });
     const field = h('div', { class: 'spa' });
+    field.style.background = 'linear-gradient(#f7e6ee,#fff5f9)';
     const toast = h('div', { class: 'g-note', style: { minHeight: '30px' } });
     body.append(top, field, toast);
     Object.entries(ST).forEach(([id, s]) => {
@@ -43,7 +44,7 @@
     function say(m) { toast.textContent = m; clearTimeout(toastT); toastT = setTimeout(() => { toast.textContent = 'Нажми на повара, потом на то, куда ему идти.'; }, 3500); }
     function showTop() {
       top.innerHTML = '';
-      top.append(h('span', {}, 'Обслужено: ', h('b', {}, served + ' / ' + GOAL)), h('span', {}, 'Ушли недовольные: ', h('b', {}, lost + ' / 3')));
+      top.append(h('span', {}, 'Салон Каролина · ', h('b', {}, served + ' / ' + GOAL)), h('span', {}, 'Ушли: ', h('b', {}, lost + ' / 3')));
     }
 
     function mkChef(id, col, x, y) {

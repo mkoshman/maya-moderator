@@ -1,60 +1,58 @@
 (function () {
   const { h, U } = Core;
-
-  const GUIDES = {
-    mask: {
-      tab: 'Маска',
-      title: 'Instant Transformation Mask',
-      steps: ['Вымой голову шампунем', 'Убери излишки влаги полотенцем', 'Нанеси 2–4 нажатия по длине', 'Оставь на 3 минуты, не смывая', 'Приступай к укладке'],
-    },
-    peel: {
-      tab: 'Пилинг',
-      title: 'Refreshing Exfoliation',
-      steps: ['Вымой голову шампунем', 'Нанеси пилинг на влажную кожу головы по проборам', 'Оставь на 5–15 минут', 'Тщательно смой'],
-    },
-    shampoo: {
-      tab: 'Шампунь',
-      title: 'Multiuse Shampoo',
-      steps: ['Нанеси небольшое количество на мокрые волосы и кожу головы', 'Вспень массажными движениями', 'Тщательно смой', 'При необходимости повтори'],
-    },
-  };
+  const POOLS = [
+    ['Шампунь', 'Смыть', 'Полотенце'],
+    ['Шампунь', 'Пилинг', 'Смыть', 'Маска'],
+    ['Шампунь', 'Смыть', 'Пилинг', 'Смыть', 'Полотенце', 'Маска'],
+    ['Шампунь', 'Смыть', 'Пилинг', 'Смыть', 'Полотенце', 'Маска', 'Термозащита', 'Фен'],
+  ];
 
   Games.steps = function (body) {
-    let key = 'mask';
-    let timers = [], dead = false;
+    let round = 0, dead = false, timers = [];
+    const later = (fn, ms) => timers.push(setTimeout(() => !dead && fn(), ms));
 
     function play() {
-      const g = GUIDES[key];
-      let idx = 0, over = false;
+      const labels = POOLS[Math.min(round, POOLS.length - 1)];
+      const seq = [];
+      const len = 2 + round;
+      for (let i = 0; i < len; i++) seq.push(U.ri(0, labels.length - 1));
+      let phase = 'show', player = [], over = false;
       body.innerHTML = '';
-      body.append(h('div', { class: 'tabs' }, Object.entries(GUIDES).map(([k, v]) =>
-        h('button', { class: k === key ? 'on' : '', onclick: () => { key = k; play(); } }, v.tab))));
-      body.append(h('div', { class: 'g-top' }, h('span', {}, 'Как наносить ' + g.title), h('b', {}, 'одна попытка')));
-      const seq = h('div', { class: 'seq' }, g.steps.map((_, i) => h('i', {}, i + 1)));
-      body.append(seq);
-      const list = h('div', { class: 'stp' });
-      U.shuffle(g.steps.map((t, i) => ({ t, i }))).forEach((o) => {
-        const b = h('button', {}, o.t);
+      body.append(h('div', { class: 'g-top' }, h('span', {}, 'Повтори последовательность'), h('b', {}, 'раунд ' + (round + 1))));
+      const note = h('div', { class: 'g-note' }, 'Смотри, какие кнопки загорятся. Потом нажми то же самое.');
+      const grid = h('div', { class: 'simon' });
+      const btns = labels.map((lab, i) => {
+        const b = h('button', {}, lab);
         b.onclick = () => {
-          if (over || b.classList.contains('ok')) return;
-          if (o.i === idx) {
-            b.classList.add('ok'); seq.children[idx].classList.add('f'); idx++;
-            if (idx === g.steps.length) {
-              over = true;
-              timers.push(setTimeout(() => !dead && Core.result(body, { win: true, text: 'Порядок верный, всё как в гайде.', onRetry: play }), 600));
-            }
-          } else {
-            over = true; b.classList.add('bad', 'shake');
-            [...list.children].forEach((x) => { x.disabled = true; });
-            timers.push(setTimeout(() => !dead && Core.result(body, { win: false, title: 'Не тот шаг', text: 'Это не следующий шаг по гайду. В приложении попытка одна, в презентации можно сыграть снова.', onRetry: play }), 700));
+          if (phase !== 'play' || over) return;
+          flash(i, 220);
+          player.push(i);
+          const k = player.length - 1;
+          if (player[k] !== seq[k]) {
+            over = true; phase = 'done';
+            later(() => Core.result(body, { win: false, title: 'Сбилась', text: 'Последовательность другая. В приложении попытка одна, здесь можно ещё раз.', onRetry: () => { round = 0; play(); } }), 500);
+            return;
+          }
+          if (player.length === seq.length) {
+            if (round >= 3) later(() => Core.result(body, { win: true, text: 'Четыре раунда. Кнопок стало больше, последовательность длиннее.', onRetry: () => { round = 0; play(); } }), 400);
+            else { round++; later(play, 700); }
           }
         };
-        list.append(b);
+        grid.append(b);
+        return b;
       });
-      body.append(list, h('div', { class: 'g-note' }, 'Нажимай шаги по порядку. Подсказок нет, ошибся и игра закончилась.'));
+      body.append(note, grid);
+      function flash(i, ms) {
+        btns[i].classList.add('lit');
+        later(() => btns[i].classList.remove('lit'), ms);
+      }
+      function show(k) {
+        if (k >= seq.length) { phase = 'play'; note.textContent = 'Теперь повтори.'; return; }
+        later(() => { flash(seq[k], 420); later(() => show(k + 1), 520); }, 280);
+      }
+      show(0);
     }
     play();
     return () => { dead = true; timers.forEach(clearTimeout); };
   };
-  Games.steps.GUIDES = GUIDES;
 })();

@@ -40,12 +40,37 @@
   };
 
   const PALETTE = [
-    { c: '#d4005f', name: 'Маска Instant Transformation' },
-    { c: '#e8a33d', name: 'Эликсир Recharging' },
-    { c: '#5aa02c', name: 'Шампунь Multiuse' },
-    { c: '#3b82c4', name: 'Маска с гиалуроном' },
-    { c: '#8b5fbf', name: 'Пилинг Refreshing Exfoliation' },
+    { c: '#5aa02c', name: 'Multiuse Shampoo', id: 'lmb05' },
+    { c: '#8b5fbf', name: 'Refreshing Exfoliation', id: 'lmb57' },
+    { c: '#d4005f', name: 'Instant Transformation', id: 'lmb56' },
+    { c: '#c9a227', name: 'Recharging Elixir', id: 'lmb43' },
   ];
+  const PRODUCTS = [
+    { id: 'lmb101', name: 'Dry Shampoo', vol: '12–40 г', cat: 'Очищение', color: '#8aa3b5', img: 'lmb101' },
+    { id: 'lmb43', name: 'Recharging Elixir', vol: 'масло', cat: 'Несмываемый', color: '#c9a227', img: 'lmb43' },
+    { id: 'lmb87', name: 'Glance spray', vol: '120 мл', cat: 'Несмываемый', color: '#d4005f', img: 'lmb87' },
+    { id: 'lmb42', name: 'Protein Thermal Spray', vol: '200 мл', cat: 'Несмываемый', color: '#3b82c4', img: 'lmb42' },
+    { id: 'lmb44', name: 'Total Revitalizer', vol: '300 мл', cat: 'Несмываемый', color: '#af004e', img: 'lmb44' },
+    { id: 'lmb56', name: 'Hyaluronic mask', vol: '245 г', cat: 'Увлажнение', color: '#d4005f', img: 'lmb56' },
+    { id: 'lmb05', name: 'Multiuse Shampoo', vol: '300 мл', cat: 'Очищение', color: '#5aa02c', img: 'lmb05' },
+    { id: 'tsh97', name: 'Tashe Rosemary Mask', vol: 'маска', cat: 'Увлажнение', color: '#6b8f3a', img: 'tsh97' },
+    { id: 'tsh95', name: 'Tashe 500 мл', vol: '500 мл', cat: 'Очищение', color: '#3d6b2e', img: 'tsh95' },
+    { id: 'tsh14', name: 'Tashe 1000 мл', vol: 'до 1000 мл', cat: 'Очищение', color: '#2f5a28', img: 'tsh14' },
+  ];
+  const img = (k, w) => `<img src="${(window.ASSETS || {})[k] || ''}" alt="" style="width:${w || 48}px;height:auto;display:block;margin:0 auto;pointer-events:none">`;
+  function volFlarik(size = 36) {
+    const src = (window.ASSETS || {}).flarik || '';
+    return `<img src="${src}" alt="" width="${size}" height="${size}" style="object-fit:contain">`;
+  }
+  function flarik3d(emo, size = 90) {
+    const faces = {
+      happy: '<path d="M28 58q22 18 44 0" stroke="#7e0038" stroke-width="4" fill="none" stroke-linecap="round"/><circle cx="38" cy="42" r="5"/><circle cx="62" cy="42" r="5"/>',
+      wow: '<ellipse cx="50" cy="62" rx="8" ry="10" fill="#7e0038"/><circle cx="36" cy="40" r="7"/><circle cx="64" cy="40" r="7"/>',
+      love: '<path d="M38 48l-7-7a5 5 0 017-7l2 2 2-2a5 5 0 017 7zM62 48l-7-7a5 5 0 017-7l2 2 2-2a5 5 0 017 7z" fill="#af004e"/>',
+      wink: '<circle cx="38" cy="42" r="5"/><path d="M54 42q8-8 16 0" stroke="#1a1118" stroke-width="4" fill="none" stroke-linecap="round"/><path d="M32 60q18 12 36 0" stroke="#7e0038" stroke-width="4" fill="none"/>',
+    };
+    return `<div class="flarik-face" style="width:${size}px;height:${size}px">${volFlarik(size)}<svg class="emo" viewBox="0 0 100 100" width="${size * .55}" height="${size * .55}">${faces[emo] || faces.happy}</svg></div>`;
+  }
 
   function flarik(emotion = 'happy', size = 64, extra = '') {
     const petals = [0, 72, 144, 216, 288]
@@ -134,6 +159,6 @@
     return ov;
   }
 
-  window.Core = { U, h, s, PALETTE, flarik, productSVG, icon, ICONS, ITEMS, itemSVG, phoneApp, result, NS };
+  window.Core = { U, h, s, PALETTE, PRODUCTS, img, volFlarik, flarik3d, flarik, productSVG, icon, ICONS, ITEMS, itemSVG, phoneApp, result, NS };
   window.Games = {};
 })();
