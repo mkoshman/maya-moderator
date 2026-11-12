@@ -845,6 +845,19 @@ input.in,textarea.in{width:100%;border:1.5px solid var(--border2);border-radius:
 .evo-i small{font-size:8.5px;color:#7e0038;font-weight:700}
 .evo-i.got{opacity:1;border-color:#af004e;background:var(--blush)}
 .evo-i.nx{box-shadow:0 0 0 2px #af004e55;opacity:1}
+.mc-time b{font-variant-numeric:tabular-nums}.mc-time.low{color:#c1121f}.mc-time.low b{color:#c1121f}
+.mc-board{width:100%;flex:none;border-radius:20px;background:radial-gradient(circle at 15% 8%,#ffeaf4 0,transparent 45%),radial-gradient(circle at 90% 95%,#f7b8d4 0,transparent 55%),#FFD9EA;padding:10px}
+.mc-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.mc{border:0;background:none;padding:0;height:80px;perspective:600px;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.mc-in{position:relative;width:100%;height:100%;transition:transform .45s;transform-style:preserve-3d}
+.mc.open .mc-in{transform:rotateY(180deg)}
+.mc-back,.mc-front{position:absolute;inset:0;border-radius:13px;display:flex;align-items:center;justify-content:center;backface-visibility:hidden;-webkit-backface-visibility:hidden}
+.mc-back{background:linear-gradient(145deg,#c2105f,#AF004E 60%,#8a0040);box-shadow:0 3px 0 #6e0033,0 5px 9px rgba(175,0,78,.3)}
+.mc-back:before{content:"";position:absolute;inset:5px;border:1.5px dashed rgba(255,217,234,.55);border-radius:9px}
+.mc-back img{filter:drop-shadow(0 3px 3px rgba(60,0,25,.45))}
+.mc-front{background:#fff;transform:rotateY(180deg);box-shadow:0 3px 0 #e9a9c6,0 5px 9px rgba(175,0,78,.15)}
+.mc-front img{width:auto!important;max-width:92%;max-height:74px;height:auto!important}
+.mc.done .mc-front{background:#FEFDBC;box-shadow:0 3px 0 #d8c95a,0 0 0 3px #AF004E}
 .pyr-board{width:100%;flex:none;border-radius:20px;background:radial-gradient(circle at 20% 15%,rgba(255,217,234,.35),transparent 40%),radial-gradient(circle at 85% 70%,rgba(255,79,154,.3),transparent 45%),linear-gradient(160deg,#c4156a,#7a1642 55%,#3a0a22);padding:0 0 10px;box-shadow:inset 0 2px 0 rgba(255,255,255,.12)}
 .pyr-field{position:relative;width:100%;height:392px}
 .pt{position:absolute;width:72px;height:86px;border-radius:12px;background:#fff;border:0;padding:5px 3px 4px;box-shadow:0 3px 0 #d9c3cf,0 6px 10px rgba(0,0,0,.28);transition:transform .15s,filter .2s}
@@ -1185,6 +1198,21 @@ window.CATALOG = [
     risk: 'Раскладка должна всегда решаться. Мы строим её от обратного, чтобы тройки всегда можно собрать.',
   },
   {
+    id: 'match', game: 'match', pair: false, name: 'Найди пару', family: 'Память', icon: '🎴',
+    goal: 'Запомнить, как выглядят продукты линейки. Упаковки и названия те же, что на карточках в приложении.',
+    how: [
+      'Двадцать карточек лежат закрытыми. На рубашке розовый объёмный Фларик.',
+      'Открываешь две карточки подряд. Если это один и тот же продукт, пара остаётся открытой.',
+      'Если продукты разные, карточки сами закрываются обратно. Нужно запомнить, где что лежало.',
+      'На всю игру даётся 90 секунд. Время идёт с первой открытой карточки, последние 15 секунд цифры краснеют.',
+      'Успела открыть все десять пар — победа. Время вышло — «Время вышло» и кнопка «Ещё раз» с новой раскладкой.',
+    ],
+    now: ['Квиз «Узнай продукт по упаковке». Тот же материал, но без игры.'],
+    future: 'Набор из десяти продуктов можно менять под месяц. Картинки берутся из базы продуктов.',
+    miss: ['Экран игры.', 'Выгрузка картинок продуктов из базы с нужным размером.'],
+    risk: 'Продукты с похожей упаковкой путаются. Берём в одну партию продукты, которые хорошо различаются. Если 90 секунд мало для новичков, время легко поменять одной цифрой.',
+  },
+  {
     id: 'steps', game: 'steps', pair: false, name: 'Нажми по порядку', family: 'Кнопки', icon: '🔢',
     goal: 'Выучить порядок нанесения продукта из гайда. Порядок шагов берём точно из карточки продукта.',
     how: [
@@ -1274,6 +1302,21 @@ window.PAIR = [
     future: 'Две консультантки в одной игре на двух телефонах. Общий счёт ходов.',
     miss: ['Игра на двух телефонах.', 'Очередь ходов.'],
     risk: 'Если одна уходит из игры, партию нужно сохранять или передавать другой.',
+  },
+  {
+    id: 'match2', game: 'match2', name: 'Найди пару вдвоём', family: 'Память', icon: '🎴',
+    goal: 'Искать пары продуктов вместе с коллегой. Пары общие, победа общая: так никто не остаётся «проигравшей».',
+    how: [
+      'Одно поле из двадцати закрытых карточек у обеих. Пары общие, время общее: две минуты.',
+      'Ходите по очереди. Ход: открыть две карточки.',
+      'Нашла пару — карточки остаются открытыми и ты ходишь ещё раз. Не нашла — карточки закрываются, ход переходит подруге.',
+      'Нужно вместе открыть все десять пар до конца времени. Видно, чей сейчас ход.',
+      'В презентации подругу играет компьютер: она помнит не все карточки, как живой человек.',
+    ],
+    now: ['Два задания одной недели, которые выполняются в паре. Результат общий, но игры нет.'],
+    future: 'Игра на двух телефонах с живой подругой: общее поле и очередь ходов. Приглашение через ту же оболочку, что у «Залей банку вдвоём».',
+    miss: ['Игра на двух телефонах.', 'Очередь ходов и общее время.', 'Приглашение коллеги из сети.'],
+    risk: 'Если подруга долго не ходит, нужен таймаут на ход, иначе общее время сгорает.',
   },
   {
     id: 'head2', game: 'head2', name: 'Уход вдвоём', family: 'Уход', icon: '💇',
@@ -2068,6 +2111,115 @@ window.PAIR = [
     reset();
     return () => { dead = true; timers.forEach(clearTimeout); };
   };
+})();
+
+(function () {
+  const { h, U, PRODUCTS, img } = Core;
+  const LIMIT = 90, LIMIT2 = 120;
+  const fmt = (t) => Math.floor(t / 60) + ':' + String(Math.floor(t % 60)).padStart(2, '0');
+  Games.match = function (body, opts) {
+    const pair = !!(opts && opts.pair), TOTAL = pair ? LIMIT2 : LIMIT;
+    let cards, open, busy, moves, found, turn, mem, left, tick, over, timers = [], dead = false, topEl;
+    const later = (fn, ms) => timers.push(setTimeout(() => !dead && fn(), ms));
+    function reset() {
+      clearInterval(tick); tick = null;
+      const set = U.shuffle(PRODUCTS).slice(0, 10);
+      cards = U.shuffle([...set, ...set].map((p, i) => ({ p, k: i, done: false })));
+      open = []; busy = false; over = false; moves = 0; found = 0; turn = 'me'; mem = new Set(); left = TOTAL;
+      const ov = body.querySelector('.overlay'); if (ov) ov.remove();
+      render();
+    }
+    function top() {
+      const low = left <= 15;
+      const els = [h('span', {}, 'Пары: ', h('b', {}, found + ' / 10')),
+        h('span', { class: 'mc-time' + (low ? ' low' : '') }, '⏱ ', h('b', {}, fmt(left)))];
+      if (pair) els.unshift(h('span', { class: 'role ' + (turn === 'me' ? 'me' : '') }, turn === 'me' ? 'Твой ход' : 'Ход подруги'));
+      return h('div', { class: 'g-top' }, ...els);
+    }
+    const refresh = () => { topEl.replaceWith(topEl = top()); };
+    function startClock() {
+      if (tick) return;
+      const t0 = performance.now();
+      tick = setInterval(() => {
+        if (dead || over) return;
+        const nl = Math.max(0, TOTAL - (performance.now() - t0) / 1000);
+        const changed = Math.ceil(nl) !== Math.ceil(left); left = nl;
+        if (changed) refresh();
+        if (nl <= 0) lose();
+      }, 200);
+    }
+    function lose() {
+      over = true; clearInterval(tick); tick = null; left = 0; refresh();
+      Core.result(body, { win: false, title: 'Время вышло', text: 'Открыто пар: ' + found + ' из 10. Попробуй ещё раз, расклад каждый раз новый.', onRetry: reset });
+    }
+    function win() {
+      over = true; clearInterval(tick); tick = null;
+      later(() => Core.result(body, { win: true, text: pair ? 'Вы вместе нашли все десять пар. Осталось ' + fmt(Math.ceil(left)) + '.' : 'Все десять пар найдены. Осталось ' + fmt(Math.ceil(left)) + '.', onRetry: reset }), 500);
+    }
+    // карточку открывает игрок или подруга (компьютер)
+    function flip(c, by) {
+      if (over || busy && by === 'me' || c.done || open.includes(c)) return false;
+      if (by === 'me' && turn !== 'me') return false;
+      startClock();
+      open.push(c); mem.add(c); c.el.classList.add('open');
+      if (open.length < 2) return true;
+      moves++; busy = true;
+      const [a, b] = open;
+      if (a.p.id === b.p.id) {
+        later(() => {
+          a.done = b.done = true; a.el.classList.add('done'); b.el.classList.add('done');
+          found++; open = []; busy = false; refresh();
+          if (found === 10) { win(); return; }
+          if (pair && turn === 'fr') later(friend, 650); // нашла пару — ходит дальше
+        }, 450);
+      } else {
+        later(() => {
+          a.el.classList.remove('open'); b.el.classList.remove('open'); open = []; busy = false;
+          if (pair) { turn = turn === 'me' ? 'fr' : 'me'; refresh(); if (turn === 'fr') later(friend, 700); }
+        }, 900);
+      }
+      return true;
+    }
+    // подруга: помнит увиденные карточки не всегда (как живой человек)
+    function friend() {
+      if (over || turn !== 'fr' || busy) return;
+      const hidden = cards.filter((c) => !c.done && !open.includes(c));
+      const known = [...mem].filter((c) => !c.done);
+      let first = null;
+      for (const c of known) { const m = known.find((d) => d !== c && d.p.id === c.p.id); if (m && Math.random() < 0.7) { first = [c, m]; break; } }
+      if (first) { flip(first[0], 'fr'); later(() => flip(first[1], 'fr'), 800); return; }
+      const fresh = hidden.filter((c) => !mem.has(c));
+      const a = U.shuffle(fresh.length ? fresh : hidden)[0];
+      flip(a, 'fr');
+      later(() => {
+        const mate = known.find((d) => d.p.id === a.p.id && d !== a && !d.done);
+        const rest = hidden.filter((c) => c !== a);
+        const pick = mate && Math.random() < 0.7 ? mate : U.shuffle(rest.filter((c) => !mem.has(c)).length ? rest.filter((c) => !mem.has(c)) : rest)[0];
+        flip(pick, 'fr');
+      }, 800);
+    }
+    function render() {
+      body.innerHTML = '';
+      topEl = top();
+      const board = h('div', { class: 'mc-board' });
+      const grid = h('div', { class: 'mc-grid' });
+      cards.forEach((c) => {
+        const big = ['tsh17', 'tsh97'].includes(c.p.img);
+        c.el = h('button', { class: 'mc', 'data-id': c.p.id, 'aria-label': 'Карточка', onclick: () => flip(c, 'me') },
+          h('div', { class: 'mc-in' },
+            h('div', { class: 'mc-back', html: img('flarik', 46) }),
+            h('div', { class: 'mc-front', html: img(c.p.img, big ? 72 : 66) })));
+        grid.append(c.el);
+      });
+      board.append(grid);
+      body.append(topEl, board, h('div', { class: 'g-note' }, pair
+        ? 'Пары общие. Нашла пару — ходишь ещё раз, не нашла — ход подруги. Время общее.'
+        : 'Время пойдёт с первой открытой карточки. Одинаковые остаются, разные закроются.'));
+    }
+    reset();
+    return () => { dead = true; clearInterval(tick); timers.forEach(clearTimeout); };
+  };
+  Games.match2 = (b) => Games.match(b, { pair: true });
 })();
 
 (function () {
@@ -3269,7 +3421,7 @@ window.PAIR = [
       const t = (e) => h('div', { class: 'tile', onclick: () => go(e.id) }, h('b', {}, (e.icon || '') + ' ' + e.name), h('span', {}, e.family || e.tag || ''));
       root.append(h('div', { class: 'slide' }, h('h2', {}, 'Все форматы на одной странице'), p('Нажми карточку — откроется игра в рамке iPhone. Миссия дня, ситуативка, видео, инвайт и обучение не меняем.'),
         h('h3', {}, 'Одиночные'), h('div', { class: 'grid c3' }, CATALOG.map(t)),
-        h('h3', {}, 'На двоих'), h('div', { class: 'grid c3' }, PAIR.filter((x) => x.id === 'pairshell' || x.id === 'spa').map(t)),
+        h('h3', {}, 'На двоих'), h('div', { class: 'grid c3' }, PAIR.filter((x) => ['pairshell', 'spa', 'match2'].includes(x.id)).map(t)),
         h('h3', {}, 'Праздники'), h('div', { class: 'grid c3' }, [
           { id: 'school', name: 'Подарки в школе Flario', family: 'Новый год / ДР' },
           { id: 'tree', name: 'Найди на ёлке', family: 'Новый год' },
@@ -3288,7 +3440,7 @@ window.PAIR = [
   CATALOG.forEach((e) => S.push(gameSlide(e, 'Игры')));
 
   /* ---------- вдвоём ---------- */
-  PAIR.filter((e) => e.id === 'pairshell' || e.id === 'spa').forEach((e) => S.push(gameSlide(e, 'Игры')));
+  PAIR.filter((e) => ['pairshell', 'spa', 'match2'].includes(e.id)).forEach((e) => S.push(gameSlide(e, 'Игры')));
 
   const holiday = [
     { id:'school', game:'school', name:'Подарки в школе Flario', family:'Праздник',
@@ -3388,7 +3540,7 @@ window.PAIR = [
     id: 'planner', sec: 'План', title: 'Собрать неделю', side: true,
     render(root) {
       const days = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
-      const opts = [{ id: '', name: 'только миссия' }, ...CATALOG.filter((g) => !g.layer).map((g) => ({ id: g.id, name: g.name })), { id: 'pairshell', name: 'Залей банку вдвоём' }, { id: 'spa', name: 'Салон' }];
+      const opts = [{ id: '', name: 'только миссия' }, ...CATALOG.filter((g) => !g.layer).map((g) => ({ id: g.id, name: g.name })), { id: 'pairshell', name: 'Залей банку вдвоём' }, { id: 'match2', name: 'Найди пару вдвоём' }, { id: 'spa', name: 'Салон' }];
       const plan = Array(7).fill('');
       const checks = h('div');
       function run() {
